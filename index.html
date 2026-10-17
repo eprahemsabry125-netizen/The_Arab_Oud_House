@@ -245,8 +245,6 @@
         let isAdmin = false;
         let swiperInstance = null;
         let products = []; 
-        
-        // ✅ إصلاح الخطأ: تعريف المتغير ده اللي كان ناقص ومسبب تعطيل الزرار
         let currentEditingImages = []; 
 
         window.toggleDrawer = function() {
@@ -282,11 +280,11 @@
             const container = document.getElementById('qrcode');
             container.innerHTML = '';
             new QRCode(container, { text: SITE_URL, width: 240, height: 240, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
-            const savedLogo = document.getElementById('siteLogo').src; 
+            const logoImg = document.getElementById('siteLogo');
             const qrLogoImg = document.getElementById('qrLogoImg');
             const qrLogoText = document.getElementById('qrLogoText');
-            if (savedLogo && savedLogo !== window.location.href) { 
-                qrLogoImg.src = savedLogo; qrLogoImg.classList.remove('hidden'); qrLogoText.classList.add('hidden'); 
+            if (!logoImg.classList.contains('hidden') && logoImg.src) { 
+                qrLogoImg.src = logoImg.src; qrLogoImg.classList.remove('hidden'); qrLogoText.classList.add('hidden'); 
             } 
             else { qrLogoImg.classList.add('hidden'); qrLogoText.classList.remove('hidden'); }
         }
@@ -611,11 +609,10 @@
             toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
-        window.onload = () => {
-            applyAdminMode();
-            loadSettings(); 
-            loadProductsFromFirebase(); 
-        };
+        // تشغيل الدوال مباشرة بدون window.onload لضمان عملها فوراً
+        applyAdminMode();
+        loadSettings(); 
+        loadProductsFromFirebase(); 
     </script>
 </body>
 </html>
