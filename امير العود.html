@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بيت العود العربي | عطور فاخرة</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- 🔳 مكتبة QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #0a0a0a; color: #e5e5e5; overflow-x: hidden; }
+        .gold-text { color: #D4AF37; }
+        .gold-bg { background-color: #D4AF37; }
+        .gold-border { border-color: #D4AF37; }
+        .product-card { position: relative; transition: transform 0.3s ease, border-color 0.3s ease; }
+        .product-card:hover { transform: translateY(-5px); border-color: #D4AF37; }
+        
+        .admin-only { display: none !important; }
+        
+        #secretAdminBtn { opacity: 0.1; transition: opacity 0.3s; }
+        #secretAdminBtn:hover { opacity: 1; }
+        
+        .preview-img-container {
+            position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #555;
+        }
+        .preview-img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .delete-preview-btn {
+            position: absolute; top: 2px; right: 2px; background: rgba(220, 38, 38, 0.9); color: white; 
+            width: 20px; height: 20px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+
+        .swiper-button-next, .swiper-button-prev {
+            color: #D4AF37 !important;
+            background: rgba(0, 0, 0, 0.5);
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50%;
+        }
+        .swiper-button-next::after, .swiper-button-prev::after {
+            font-size: 18px !important;
+            font-weight: bold;
+        }
+        .swiper-pagination-bullet-active {
+            background: #D4AF37 !important;
+        }
+
+        .modal-box {
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
+            will-change: transform, opacity;
+        }
+        .drag-handle {
+            width: 50px; height: 5px; background: #555; border-radius: 5px; margin: 0 auto 15px auto;
+        }
+
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background-color: #D4AF37; color: #000; padding: 12px 24px; border-radius: 8px;
+            font-weight: bold; opacity: 0; transition: all 0.4s ease; z-index: 9999;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            display: flex; align-items: center; gap: 8px;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        #videoContainer video {
+            width: 100%;
+            max-height: 70vh;
+            background-color: #000;
+            display: block;
+        }
+        #videoContainer iframe {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            border: 0;
+        }
+
+        /* 🍔 زر الهامبرجر */
+        .hamburger-btn {
+            position: fixed; top: 20px; right: 20px; z-index: 60;
+            width: 50px; height: 50px;
+            background: rgba(15, 15, 15, 0.9);
+            border: 1.5px solid #D4AF37; border-radius: 10px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s ease;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        .hamburger-btn:hover {
+            background: rgba(212, 175, 55, 0.15);
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+        }
+        .hamburger-btn:active { transform: scale(0.95); }
+        .hamburger-btn span {
+            display: block; width: 26px; height: 2.5px;
+            background: #D4AF37; border-radius: 2px;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .hamburger-btn span:nth-child(1) { margin-bottom: 6px; }
+        .hamburger-btn span:nth-child(3) { margin-top: 6px; }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: translateY(8.5px) rotate(45deg); margin-bottom: 0;
+        }
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0; transform: scaleX(0);
+        }
+        .hamburger-btn.active span:nth-child(3) {
+            transform: translateY(-8.5px) rotate(-45deg); margin-top: 0;
+        }
+
+        /* 🟡 زر QR العائم */
+        .qr-float-btn {
+            position: fixed; bottom: 24px; right: 24px; z-index: 45;
+            width: 58px; height: 58px;
+            background: linear-gradient(135deg, #D4AF37, #B8962E);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 6px 25px rgba(212, 175, 55, 0.5), 0 0 0 4px rgba(212, 175, 55, 0.15);
+            color: #000;
+            border: none;
+        }
+        .qr-float-btn:hover {
+            transform: scale(1.12) rotate(8deg);
+            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.7), 0 0 0 6px rgba(212, 175, 55, 0.25);
+        }
+        .qr-float-btn:active {
+            transform: scale(0.95);
+        }
+        .qr-float-btn i {
+            font-size: 26px;
+        }
+        /* نبضة خفيفة لجذب الانتباه */
+        .qr-float-btn::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid rgba(212, 175, 55, 0.6);
+            animation: qrPulse 2s ease-out infinite;
+        }
+        @keyframes qrPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .drawer-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            opacity: 0; visibility: hidden;
+            transition: all 0.35s ease; z-index: 55;
+        }
+        .drawer-overlay.active { opacity: 1; visibility: visible; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0;
+            width: 340px; max-width: 88vw; height: 100vh;
+            background: linear-gradient(180deg, #111111 0%, #050505 100%);
+            border-left: 1px solid rgba(212, 175, 55, 0.3);
+            transform: translateX(100%);
+            transition: transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 58;
+            padding: 90px 0 30px 0;
+            overflow-y: auto;
+            box-shadow: -15px 0 40px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-title {
+            text-align: center; color: #D4AF37; font-size: 22px; font-weight: bold;
+            padding: 0 20px 20px 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            margin-bottom: 15px; letter-spacing: 2px; position: relative;
+        }
+        .drawer-title::after {
+            content: ''; position: absolute; bottom: -1px; left: 50%;
+            transform: translateX(-50%); width: 60px; height: 2px;
+            background: #D4AF37; border-radius: 2px;
+        }
+
+        .drawer-nav {
+            display: flex; flex-direction: column; padding: 10px 15px; gap: 6px;
+        }
+        .drawer-link {
+            padding: 16px 18px; color: #e5e5e5; font-size: 16px; font-weight: 600;
+            transition: all 0.3s ease; text-decoration: none;
+            display: flex; align-items: center; gap: 14px;
+            border-radius: 10px; background: transparent; border: 1px solid transparent;
+            cursor: pointer; width: 100%; text-align: right;
+            font-family: 'Cairo', sans-serif;
+            position: relative; overflow: hidden;
+        }
+        .drawer-link::before {
+            content: ''; position: absolute; right: 0; top: 0;
+            height: 100%; width: 0; background: rgba(212, 175, 55, 0.1);
+            transition: width 0.3s ease; z-index: -1;
+        }
+        .drawer-link:hover {
+            color: #D4AF37; border-color: rgba(212, 175, 55, 0.3);
+            transform: translateX(-5px);
+        }
+        .drawer-link:hover::before { width: 100%; }
+        .drawer-link .icon {
+            color: #D4AF37; font-size: 18px; width: 30px;
+            text-align: center;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+
+        .drawer-footer {
+            margin-top: auto;
+            padding: 20px 25px 0 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* 🌐 أيقونات السوشيال */
+        .social-row {
+            display: flex; justify-content: center; gap: 16px;
+            margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .social-icon {
+            width: 46px; height: 46px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-size: 19px; position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        .social-icon::after {
+            content: ''; position: absolute; inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.35), transparent 55%);
+            pointer-events: none;
+        }
+        .social-icon.whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); }
+        .social-icon.instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .social-icon.facebook { background: linear-gradient(135deg, #1877F2, #0C5BC4); }
+        .social-icon.tiktok { background: linear-gradient(135deg, #000000, #25F4EE, #FE2C55); }
+
+        .social-icon:hover, .social-icon:active, .social-icon:focus {
+            transform: translateY(-6px) scale(1.12);
+        }
+        .social-icon.whatsapp:hover, .social-icon.whatsapp:active, .social-icon.whatsapp:focus {
+            box-shadow: 0 0 0 2px #25D366, 0 0 15px 3px rgba(37, 211, 102, 0.85), 0 0 35px 10px rgba(37, 211, 102, 0.5), 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+        .social-icon.instagram:hover, .social-icon.instagram:active, .social-icon.instagram:focus {
+            box-shadow: 0 0 0 2px #dc2743, 0 0 15px 3px rgba(220, 39, 67, 0.85), 0 0 35px 10px rgba(188, 24, 136, 0.6), 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+        .social-icon.facebook:hover, .social-icon.facebook:active, .social-icon.facebook:focus {
+            box-shadow: 0 0 0 2px #1877F2, 0 0 15px 3px rgba(24, 119, 242, 0.85), 0 0 35px 10px rgba(24, 119, 242, 0.5), 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+        .social-icon.tiktok:hover, .social-icon.tiktok:active, .social-icon.tiktok:focus {
+            box-shadow: 0 0 0 2px #25F4EE, 0 0 15px 3px rgba(37, 244, 238, 0.8), 0 0 35px 10px rgba(254, 44, 85, 0.6), 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 🔍 تحسينات الزوم */
+        .swiper.mySwiper { touch-action: none; }
+        .swiper-slide {
+            overflow: hidden; display: flex; align-items: center;
+            justify-content: center; background: #000;
+        }
+        .zoomable-image {
+            max-width: 100%; max-height: 100%;
+            object-fit: contain;
+            user-select: none; -webkit-user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: auto;
+            transform-origin: center center;
+            will-change: transform;
+        }
+
+        /* 🔳 تنسيقات QR Modal */
+        #qrcode {
+            display: inline-block;
+            line-height: 0;
+        }
+        #qrcode canvas, #qrcode img {
+            display: block;
+            border-radius: 4px;
+        }
+        .qr-center-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            border-radius: 50%;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            pointer-events: none;
+            z-index: 2;
+        }
+        .qr-center-inner {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #D4AF37;
+        }
+        .qr-center-inner img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col" id="top">
+
+    <div id="toast"><i class="fa-solid fa-check-circle"></i> <span id="toastText">تمت العملية بنجاح!</span></div>
+
+    <button id="hamburgerBtn" class="hamburger-btn" onclick="toggleDrawer()" aria-label="القائمة">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- 🟡 زر QR العائم -->
+    <button class="qr-float-btn" onclick="showQRModal()" aria-label="مشاركة الموقع">
+        <i class="fa-solid fa-qrcode"></i>
+    </button>
+
+    <div id="drawerOverlay" class="drawer-overlay" onclick="closeDrawer()"></div>
+
+    <aside id="sideDrawer" class="side-drawer">
+        <h2 class="drawer-title">القائمة الرئيسية</h2>
+        
+        <nav class="drawer-nav">
+            <a href="#top" class="drawer-link" onclick="closeDrawer()">
+                <span class="icon"><i class="fa-solid fa-house"></i></span> الرئيسية
+            </a>
+            <a href="#video-section" class="drawer-link" onclick="closeDrawer()">
+                <span class="icon"><i class="fa-solid fa-video"></i></span> فيديو المقدمة
+            </a>
+            <a href="#products-section" class="drawer-link" onclick="closeDrawer()">
+                <span class="icon"><i class="fa-solid fa-spray-can-sparkles"></i></span> مجموعة العطور
+            </a>
+            <button onclick="closeDrawer(); showQRModal();" class="drawer-link">
+                <span class="icon"><i class="fa-solid fa-qrcode"></i></span> مشاركة الموقع (QR)
+            </button>
+            <a href="https://wa.me/201000000000" target="_blank" class="drawer-link" onclick="closeDrawer()">
+                <span class="icon"><i class="fa-brands fa-whatsapp"></i></span> تواصل معنا
+            </a>
+            <button onclick="closeDrawer(); loginAdmin();" class="drawer-link">
+                <span class="icon"><i class="fa-solid fa-user-shield"></i></span> دخول التاجر
+            </button>
+        </nav>
+
+        <div class="drawer-footer">
+            <div class="social-row">
+                <a href="https://wa.me/201000000000" target="_blank" class="social-icon whatsapp" title="واتساب" aria-label="واتساب">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
+                <a href="https://instagram.com" target="_blank" class="social-icon instagram" title="انستجرام" aria-label="انستجرام">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+                <a href="https://facebook.com" target="_blank" class="social-icon facebook" title="فيسبوك" aria-label="فيسبوك">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="https://tiktok.com" target="_blank" class="social-icon tiktok" title="تيك توك" aria-label="تيك توك">
+                    <i class="fa-brands fa-tiktok"></i>
+                </a>
+            </div>
+            <p>© 2027 بيت العود العربي</p>
+        </div>
+    </aside>
+
+    <div id="adminBanner" class="admin-only bg-[#D4AF37] text-black text-center py-2 font-bold justify-center items-center gap-4 shadow-lg z-50 relative">
+        <span>👑 أنت في وضع التاجر (يمكنك التعديل مباشرة)</span>
+        <button onclick="logoutAdmin()" class="bg-black text-white px-4 py-1 rounded text-sm hover:bg-gray-800 transition">إنهاء الجلسة</button>
+    </div>
+
+    <!-- 🌟 الهيدر مع اللوجو الكبير -->
+    <header class="py-10 border-b border-gray-800 text-center flex flex-col items-center justify-center">
+        <img id="siteLogo" src="" alt="شعار بيت العود العربي" class="max-h-64 md:max-h-72 w-auto mb-4 object-contain hidden">
+        <h1 id="siteTitle" class="text-4xl md:text-5xl font-bold gold-text tracking-widest">بيت العود العربي</h1>
+        
+        <div id="logoEditArea" class="admin-only mt-4 flex-col sm:flex-row gap-2 bg-neutral-900 p-3 rounded-lg border border-gray-700">
+            <input type="file" id="logoUpload" accept="image/*" class="hidden">
+            <button type="button" onclick="document.getElementById('logoUpload').click()" class="gold-bg text-black font-bold py-2 px-4 rounded hover:bg-yellow-600 transition text-sm">📸 رفع شعار جديد</button>
+            <button type="button" onclick="removeLogo()" class="bg-red-600 text-white font-bold py-2 px-4 rounded hover:bg-red-700 transition text-sm">🗑 حذف الشعار</button>
+        </div>
+    </header>
+
+    <!-- 🎬 قسم الفيديو -->
+    <section id="video-section" class="py-8 px-4 text-center">
+        <div id="videoContainer" class="max-w-4xl mx-auto relative aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 shadow-lg"></div>
+        
+        <div id="videoEditArea" class="admin-only max-w-3xl mx-auto mt-4 flex-col gap-3 bg-neutral-900 p-4 rounded-lg border border-gray-700">
+            <p class="text-gray-400 text-xs mb-1">يدعم يوتيوب، فيميو، أو رابط فيديو مباشر (MP4 / WebM / OGG). الفيديو يشتغل تلقائياً بدون صوت.</p>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <input type="text" id="videoUrlInput" placeholder="ضع رابط الفيديو هنا..." class="flex-1 bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border">
+                <button onclick="updateVideo()" class="gold-bg text-black font-bold px-6 py-3 rounded hover:bg-yellow-600 transition">حفظ الفيديو</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="products-section" class="py-10 px-4 max-w-7xl mx-auto w-full flex-grow">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold gold-text">مجموعة العطور</h2>
+            <button id="addProductBtn" onclick="openProductForm()" class="admin-only gold-bg text-black font-bold px-6 py-2 rounded hover:bg-yellow-600 transition shadow-lg">
+                + إضافة منتج جديد
+            </button>
+        </div>
+        <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+    </section>
+
+    <footer class="py-8 text-center text-gray-600 text-sm border-t border-gray-800 relative mt-10">
+        <p>© 2027 بيت العود العربي. جميع الحقوق محفوظة.</p>
+        <button id="secretAdminBtn" onclick="loginAdmin()" class="absolute bottom-2 left-2 text-gray-500 text-xs hover:text-white transition">دخول التاجر</button>
+    </footer>
+
+    <!-- =========================================================
+         🔳 نافذة QR Code
+         ========================================================= -->
+    <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-95 hidden flex items-center justify-center p-4 z-[80]">
+        <div class="bg-neutral-900 border-2 border-[#D4AF37] rounded-2xl max-w-md w-full p-6 sm:p-8 relative shadow-2xl text-center animate-fadeIn">
+            <button onclick="closeQRModal()" class="absolute top-3 left-3 w-9 h-9 rounded-full bg-neutral-800 text-gray-400 hover:text-white hover:bg-red-600 transition flex items-center justify-center text-2xl leading-none">&times;</button>
+            
+            <h2 class="text-2xl sm:text-3xl font-bold gold-text mb-1">امسح الكود للدخول</h2>
+            <p class="text-gray-400 text-sm mb-6">افتح كاميرا الموبايل وامسح الكود</p>
+            
+            <!-- حاوية الـ QR -->
+            <div class="relative inline-block mb-6 bg-white p-4 rounded-2xl shadow-xl">
+                <div id="qrcode"></div>
+                <!-- اللوجو أو النص في المنتصف -->
+                <div class="qr-center-overlay">
+                    <div class="qr-center-inner">
+                        <img id="qrLogoImg" src="" alt="Logo" class="hidden">
+                        <span id="qrLogoText" class="text-black font-bold text-[10px] leading-tight text-center px-1">بيت<br>العود</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- خانة الرابط -->
+            <div class="bg-neutral-800 rounded-lg p-3 mb-4 flex items-center gap-2 border border-gray-700">
+                <i class="fa-solid fa-link text-[#D4AF37]"></i>
+                <input id="siteUrlInput" type="text" readonly class="flex-1 bg-transparent text-gray-300 text-sm focus:outline-none truncate" dir="ltr">
+            </div>
+            
+            <!-- زر النسخ -->
+            <button onclick="copySiteUrl()" class="w-full gold-bg text-black font-bold py-3 rounded-lg hover:bg-yellow-600 transition flex items-center justify-center gap-2 active:scale-95">
+                <i class="fa-solid fa-copy"></i>
+                نسخ رابط الموقع
+            </button>
+        </div>
+    </div>
+
+    <!-- باقي النوافذ -->
+    <div id="productModal" class="fixed inset-0 bg-black bg-opacity-90 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+        <div id="modalBox" class="modal-box bg-neutral-900 border border-gray-700 rounded-t-2xl sm:rounded-lg max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
+            <div class="drag-handle sm:hidden"></div>
+            <button onclick="closeModal('productModal')" class="absolute top-4 left-4 text-gray-400 hover:text-white text-3xl z-50 hidden sm:block">&times;</button>
+            
+            <div class="flex flex-col gap-6 mt-2 sm:mt-4">
+                <div class="w-full relative">
+                    <div class="swiper mySwiper rounded-lg overflow-hidden border border-gray-700">
+                        <div class="swiper-wrapper" id="modalImagesWrapper"></div>
+                        <div class="swiper-pagination"></div>
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-button-prev"></div>
+                    </div>
+                </div>
+                <div class="flex-1 flex flex-col justify-between">
+                    <div>
+                        <h3 id="modalTitle" class="text-3xl font-bold gold-text mb-2"></h3>
+                        <p id="modalPrice" class="text-2xl font-bold text-white mb-4"></p>
+                        <p id="modalDesc" class="text-gray-400 text-sm leading-relaxed mb-6"></p>
+                    </div>
+                    <a id="modalWhatsapp" href="#" target="_blank" class="block text-center gold-bg text-black font-bold py-3 rounded-lg hover:bg-yellow-600 transition">تواصل للطلب عبر واتساب</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="productFormModal" class="fixed inset-0 bg-black bg-opacity-95 hidden flex items-center justify-center p-4 z-[70]">
+        <div class="bg-neutral-900 border border-gold-border rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
+            <h3 id="formTitle" class="text-2xl font-bold gold-text mb-6 text-center">إضافة منتج جديد</h3>
+            <form id="productForm" class="space-y-4">
+                <input type="hidden" id="editProductId">
+                
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">اسم العطر</label>
+                    <input type="text" id="prodName" required class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">السعر (ج.م)</label>
+                    <input type="number" id="prodPrice" required class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border">
+                </div>
+                
+                <div class="bg-neutral-800 p-4 rounded-lg border border-gray-700">
+                    <label class="block text-gold-text font-bold mb-3">صور المنتج (يمكنك إضافة أكثر من صورة)</label>
+                    
+                    <div class="mb-4">
+                        <input type="file" id="prodImagesUpload" multiple accept="image/*" class="hidden">
+                        <button type="button" onclick="document.getElementById('prodImagesUpload').click()" class="w-full bg-neutral-700 border-2 border-dashed border-gold-border text-white font-bold py-4 rounded-lg hover:bg-neutral-600 transition flex items-center justify-center gap-2">
+                            <span>📸</span> اضغط هنا لاختيار صور من ذاكرة الجهاز
+                        </button>
+                        <p class="text-gray-400 text-xs text-center mt-2">يتم ضغط الصور تلقائياً</p>
+                    </div>
+                    
+                    <div class="mb-3 flex gap-2">
+                        <input type="url" id="prodImageUrl" placeholder="أو ضع رابط صورة..." class="flex-1 bg-neutral-900 border border-gray-600 rounded p-2 text-white text-sm focus:outline-none focus:border-gold-border">
+                        <button type="button" onclick="addImageUrl()" class="bg-gray-600 text-white px-4 rounded text-sm hover:bg-gray-500">إضافة</button>
+                    </div>
+
+                    <div id="imagePreviewContainer" class="flex flex-wrap gap-3 mt-4"></div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">وصف العطر وتفاصيله</label>
+                    <textarea id="prodDesc" required rows="3" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border"></textarea>
+                </div>
+                
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="flex-1 gold-bg text-black font-bold py-3 rounded hover:bg-yellow-600 transition">حفظ المنتج</button>
+                    <button type="button" onclick="closeModal('productFormModal')" class="flex-1 bg-gray-700 text-white font-bold py-3 rounded hover:bg-gray-600 transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <script>
+        const ADMIN_PASSWORD = '55555';
+        let isAdmin = false;
+        let swiperInstance = null; 
+        const TRACKPAD_NATURAL_DOWN = true; 
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('sideDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            const btn = document.getElementById('hamburgerBtn');
+            
+            if (drawer.classList.contains('active')) {
+                closeDrawer();
+            } else {
+                drawer.classList.add('active');
+                overlay.classList.add('active');
+                btn.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeDrawer() {
+            const drawer = document.getElementById('sideDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            const btn = document.getElementById('hamburgerBtn');
+            
+            drawer.classList.remove('active');
+            overlay.classList.remove('active');
+            btn.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDrawer();
+                closeQRModal();
+            }
+        });
+
+        let products = JSON.parse(localStorage.getItem('baytAlOudProducts')) || [
+            {
+                id: '1',
+                name: 'عود كمبودي ملكي',
+                price: 1500,
+                images: [
+                    'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=500&q=80',
+                    'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=500&q=80'
+                ],
+                description: 'عود كمبودي أصلي فاخر، رائحة تدوم طويلاً وتعطي إحساساً بالفخامة والتميز.'
+            }
+        ];
+
+        products = products.map(p => ({...p, id: String(p.id)}));
+
+        let currentEditingImages = []; 
+
+        // =========================================================
+        // 🔳 نظام QR Code
+        // =========================================================
+        function showQRModal() {
+            document.getElementById('qrModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            generateQRCode();
+            // عرض الرابط في الخانة
+            document.getElementById('siteUrlInput').value = window.location.href;
+        }
+
+        function closeQRModal() {
+            document.getElementById('qrModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function generateQRCode() {
+            const container = document.getElementById('qrcode');
+            container.innerHTML = '';
+            
+            const siteUrl = window.location.href.split('#')[0];
+            
+            // إعدادات QR: تصحيح خطأ H (High) عشان اللوجو ما يبوظش الكود
+            new QRCode(container, {
+                text: siteUrl,
+                width: 240,
+                height: 240,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // تحديث اللوجو أو النص في المنتصف
+            const savedLogo = localStorage.getItem('baytAlOudLogo');
+            const qrLogoImg = document.getElementById('qrLogoImg');
+            const qrLogoText = document.getElementById('qrLogoText');
+            
+            if (savedLogo) {
+                qrLogoImg.src = savedLogo;
+                qrLogoImg.classList.remove('hidden');
+                qrLogoText.classList.add('hidden');
+            } else {
+                qrLogoImg.classList.add('hidden');
+                qrLogoText.classList.remove('hidden');
+            }
+        }
+
+        async function copySiteUrl() {
+            const url = window.location.href;
+            try {
+                await navigator.clipboard.writeText(url);
+                showToast('تم نسخ رابط الموقع بنجاح!', 'fa-check-circle');
+            } catch (err) {
+                // طريقة بديلة للمتصفحات القديمة
+                const textarea = document.createElement('textarea');
+                textarea.value = url;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('تم نسخ رابط الموقع بنجاح!', 'fa-check-circle');
+                } catch (e) {
+                    showToast('فشل النسخ، جرب يدوياً', 'fa-exclamation-circle');
+                }
+                document.body.removeChild(textarea);
+            }
+        }
+
+        // =========================================================
+        // 🎬 نظام الفيديو
+        // =========================================================
+        function renderVideo(url) {
+            const container = document.getElementById('videoContainer');
+            if (!url) {
+                container.className = 'max-w-4xl mx-auto relative aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 shadow-lg flex items-center justify-center';
+                container.innerHTML = '<p class="text-gray-500">لم يتم إضافة فيديو بعد.</p>';
+                return;
+            }
+
+            const urlLower = url.toLowerCase();
+
+            if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
+                let embedUrl = url;
+                if (url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
+                else if (url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'www.youtube.com/embed/');
+                embedUrl = embedUrl.split('?')[0].split('&')[0];
+                embedUrl += '?autoplay=1&mute=1&loop=1&playlist=' + embedUrl.split('/').pop() + '&rel=0';
+                
+                container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
+                container.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                return;
+            }
+
+            if (urlLower.includes('vimeo.com')) {
+                const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+                if (match) {
+                    container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
+                    container.innerHTML = `<iframe src="https://player.vimeo.com/video/${match[1]}?autoplay=1&muted=1&loop=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+                    return;
+                }
+            }
+
+            if (urlLower.match(/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/)) {
+                container.className = 'max-w-4xl mx-auto bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
+                container.innerHTML = `
+                    <video autoplay muted loop playsinline preload="metadata" class="w-full max-h-[70vh] mx-auto">
+                        <source src="${url}">
+                        متصفحك لا يدعم تشغيل هذا الفيديو.
+                    </video>
+                `;
+                return;
+            }
+
+            container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
+            container.innerHTML = `<iframe src="${url}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+        }
+
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    callback(dataUrl);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showToast(message, icon = 'fa-check-circle') {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            toastText.innerText = message;
+            // تحديث الأيقونة
+            const iconEl = toast.querySelector('i');
+            if (iconEl) iconEl.className = `fa-solid ${icon}`;
+            
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        document.getElementById('logoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            compressImage(file, function(compressedDataUrl) {
+                document.getElementById('siteLogo').src = compressedDataUrl;
+                document.getElementById('siteLogo').classList.remove('hidden');
+                document.getElementById('siteTitle').classList.add('hidden');
+                localStorage.setItem('baytAlOudLogo', compressedDataUrl);
+                showToast('تم رفع الشعار بنجاح!');
+            });
+            this.value = '';
+        });
+
+        function removeLogo() {
+            if (confirm('هل أنت متأكد من حذف الشعار؟')) {
+                localStorage.removeItem('baytAlOudLogo');
+                document.getElementById('siteLogo').src = '';
+                document.getElementById('siteLogo').classList.add('hidden');
+                document.getElementById('siteTitle').classList.remove('hidden');
+                showToast('تم حذف الشعار.');
+            }
+        }
+
+        function loadLogo() {
+            const savedLogo = localStorage.getItem('baytAlOudLogo');
+            if (savedLogo) {
+                document.getElementById('siteLogo').src = savedLogo;
+                document.getElementById('siteLogo').classList.remove('hidden');
+                document.getElementById('siteTitle').classList.add('hidden');
+            }
+        }
+
+        function loginAdmin() {
+            const password = prompt('أدخل كلمة مرور التاجر:');
+            if (password === ADMIN_PASSWORD) {
+                isAdmin = true;
+                applyAdminMode();
+                showToast('مرحباً بك في وضع التاجر');
+            } else if (password !== null) {
+                alert('كلمة المرور خاطئة!');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdmin = false;
+            applyAdminMode();
+            showToast('تم إنهاء جلسة التاجر');
+        }
+
+        function applyAdminMode() {
+            const adminElements = document.querySelectorAll('.admin-only');
+            const secretBtn = document.getElementById('secretAdminBtn');
+            
+            if (isAdmin) {
+                adminElements.forEach(el => {
+                    if (el.id === 'adminBanner' || el.id === 'videoEditArea' || el.id === 'logoEditArea') {
+                        el.style.setProperty('display', 'flex', 'important');
+                    } else {
+                        el.style.setProperty('display', 'block', 'important');
+                    }
+                });
+                secretBtn.innerText = 'أنت مسجل كتاجر';
+                secretBtn.classList.add('gold-text');
+            } else {
+                adminElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
+                secretBtn.innerText = 'دخول التاجر';
+                secretBtn.classList.remove('gold-text');
+            }
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+            
+            if(products.length === 0 && !isAdmin) {
+                grid.innerHTML = '<p class="text-gray-500 col-span-full text-center py-10">لا توجد منتجات حالياً.</p>';
+                return;
+            }
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card bg-neutral-900 border border-gray-800 rounded-lg overflow-hidden shadow-lg flex flex-col';
+                
+                let adminButtons = '';
+                if (isAdmin) {
+                    adminButtons = `
+                        <div class="absolute top-2 right-2 flex gap-2 z-10">
+                            <button onclick="event.stopPropagation(); openProductForm('${product.id}')" class="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-blue-700 shadow-lg" title="تعديل">✎</button>
+                            <button onclick="event.stopPropagation(); deleteProduct('${product.id}')" class="bg-red-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-red-700 shadow-lg" title="حذف">🗑</button>
+                        </div>
+                    `;
+                }
+
+                const mainImage = product.images && product.images.length > 0 ? product.images[0] : 'https://placehold.co/300x400/1a1a1a/D4AF37?text=No+Image';
+
+                card.innerHTML = `
+                    ${adminButtons}
+                    <div class="h-64 overflow-hidden cursor-pointer" onclick="showProductDetails('${product.id}')">
+                        <img src="${mainImage}" alt="${product.name}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-110">
+                    </div>
+                    <div class="p-4 text-center cursor-pointer flex-grow flex flex-col justify-between" onclick="showProductDetails('${product.id}')">
+                        <h3 class="text-lg font-bold text-white mb-2">${product.name}</h3>
+                        <p class="gold-text font-bold text-xl">${product.price} ج.م</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // =========================================================
+        // 🔍 حالة الزوم
+        // =========================================================
+        let zoomScale = 1;
+        let zoomTranslateX = 0;
+        let zoomTranslateY = 0;
+        let initialPinchDistance = 0;
+        let initialZoomScale = 1;
+        let isPinching = false;
+        let isPanningZoom = false;
+        let lastPanX = 0;
+        let lastPanY = 0;
+
+        function getTouchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function applyZoomTransform() {
+            const activeImg = document.querySelector('.swiper-slide-active .zoomable-image');
+            if (!activeImg) return;
+            if (zoomScale <= 1.01) {
+                activeImg.style.transform = '';
+            } else {
+                activeImg.style.transform = `translate(${zoomTranslateX}px, ${zoomTranslateY}px) scale(${zoomScale})`;
+            }
+        }
+
+        function resetZoom() {
+            zoomScale = 1;
+            zoomTranslateX = 0;
+            zoomTranslateY = 0;
+            isPinching = false;
+            isPanningZoom = false;
+            document.querySelectorAll('.zoomable-image').forEach(el => {
+                el.style.transform = '';
+            });
+        }
+
+        function showProductDetails(id) {
+            if (isAdmin) return; 
+            
+            const product = products.find(p => String(p.id) === String(id));
+            if (!product) {
+                console.error('المنتج غير موجود. البحث عن ID:', id);
+                return;
+            }
+
+            document.getElementById('modalTitle').innerText = product.name;
+            document.getElementById('modalPrice').innerText = `${product.price} ج.م`;
+            document.getElementById('modalDesc').innerText = product.description;
+
+            const wrapper = document.getElementById('modalImagesWrapper');
+            wrapper.innerHTML = ''; 
+
+            const images = product.images || [];
+            if (images.length === 0) {
+                wrapper.innerHTML = '<div class="swiper-slide" style="height:400px;"><img src="https://placehold.co/600x400/1a1a1a/D4AF37?text=No+Image" class="zoomable-image"></div>';
+            } else {
+                images.forEach(imgUrl => {
+                    const slide = document.createElement('div');
+                    slide.className = 'swiper-slide';
+                    slide.style.height = '400px';
+                    slide.innerHTML = `<img src="${imgUrl}" class="zoomable-image" draggable="false">`;
+                    wrapper.appendChild(slide);
+                });
+            }
+
+            if (swiperInstance) {
+                swiperInstance.destroy(true, true); 
+            }
+            
+            resetZoom();
+
+            swiperInstance = new Swiper(".mySwiper", {
+                loop: false, 
+                grabCursor: true, 
+                mousewheel: {
+                    forceToAxis: true, 
+                    sensitivity: 1,    
+                    releaseOnEdges: true 
+                },
+                pagination: { el: ".swiper-pagination", clickable: true },
+                navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+                preventClicks: false,
+                preventClicksPropagation: false,
+                on: {
+                    slideChange: function () {
+                        resetZoom();
+                    }
+                }
+            });
+
+            const nextBtn = document.querySelector('.swiper-button-next');
+            const prevBtn = document.querySelector('.swiper-button-prev');
+            if (images.length <= 1) {
+                nextBtn.style.display = 'none';
+                prevBtn.style.display = 'none';
+            } else {
+                nextBtn.style.display = 'flex';
+                prevBtn.style.display = 'flex';
+            }
+
+            const phone = '201000000000'; 
+            const message = encodeURIComponent(`مرحباً، أريد طلب عطر: ${product.name} بسعر ${product.price} ج.م`);
+            document.getElementById('modalWhatsapp').href = `https://wa.me/${phone}?text=${message}`;
+
+            resetModalPosition();
+            document.body.style.overflow = 'hidden';
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        const imagesWrapper = document.getElementById('modalImagesWrapper');
+
+        imagesWrapper.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                e.stopPropagation();
+                isPinching = true;
+                initialPinchDistance = getTouchDistance(e.touches);
+                initialZoomScale = zoomScale;
+                if (swiperInstance) swiperInstance.disable();
+            } else if (e.touches.length === 1 && zoomScale > 1.01) {
+                e.stopPropagation();
+                isPanningZoom = true;
+                lastPanX = e.touches[0].clientX;
+                lastPanY = e.touches[0].clientY;
+            }
+        }, { passive: false });
+
+        imagesWrapper.addEventListener('touchmove', (e) => {
+            if (isPinching && e.touches.length === 2) {
+                e.preventDefault();
+                e.stopPropagation();
+                const currentDistance = getTouchDistance(e.touches);
+                zoomScale = Math.min(Math.max(initialZoomScale * (currentDistance / initialPinchDistance), 1), 5);
+                applyZoomTransform();
+            } else if (isPanningZoom && e.touches.length === 1 && zoomScale > 1.01) {
+                e.preventDefault();
+                e.stopPropagation();
+                zoomTranslateX += e.touches[0].clientX - lastPanX;
+                zoomTranslateY += e.touches[0].clientY - lastPanY;
+                lastPanX = e.touches[0].clientX;
+                lastPanY = e.touches[0].clientY;
+                applyZoomTransform();
+            }
+        }, { passive: false });
+
+        imagesWrapper.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) isPinching = false;
+            if (e.touches.length === 0) {
+                isPanningZoom = false;
+                if (zoomScale <= 1.05) {
+                    resetZoom();
+                    if (swiperInstance) swiperInstance.enable();
+                } else {
+                    if (swiperInstance) swiperInstance.disable();
+                }
+            }
+        });
+
+        imagesWrapper.addEventListener('wheel', (e) => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                const factor = 1 + (-e.deltaY / 300);
+                zoomScale = Math.min(Math.max(zoomScale * factor, 1), 5);
+                if (zoomScale <= 1.05) {
+                    resetZoom();
+                    if (swiperInstance) swiperInstance.enable();
+                } else {
+                    applyZoomTransform();
+                    if (swiperInstance) swiperInstance.disable();
+                }
+            }
+            else if (zoomScale > 1.01) {
+                e.preventDefault();
+                e.stopPropagation();
+                zoomTranslateX -= e.deltaX;
+                zoomTranslateY -= e.deltaY;
+                applyZoomTransform();
+            }
+        }, { passive: false });
+
+        let startY = 0;
+        let currentY = 0;
+        let isDraggingModal = false;
+        let modalInitialScrollTop = 0;
+
+        const modal = document.getElementById('productModal');
+        const modalBox = document.getElementById('modalBox');
+
+        function resetModalPosition() {
+            modalBox.style.transition = 'none';
+            modalBox.style.transform = '';
+            modalBox.style.opacity = '1';
+            setTimeout(() => { modalBox.style.transition = ''; }, 50);
+        }
+
+        function closeModalWithAnimation() {
+            modalBox.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
+            modalBox.style.transform = `translateY(100vh)`;
+            modalBox.style.opacity = '0';
+            setTimeout(() => {
+                closeModal('productModal');
+                resetModalPosition();
+            }, 300);
+        }
+
+        function snapBackModal() {
+            modalBox.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
+            modalBox.style.transform = '';
+            modalBox.style.opacity = '1';
+        }
+
+        function startDrag(clientY) {
+            startY = clientY;
+            currentY = clientY;
+            modalInitialScrollTop = modalBox.scrollTop;
+            isDraggingModal = true;
+            modalBox.style.transition = 'none';
+        }
+
+        function moveDrag(clientY, event) {
+            if (!isDraggingModal) return;
+            currentY = clientY;
+            const deltaY = currentY - startY;
+            if (deltaY > 0 && modalInitialScrollTop <= 5) {
+                if (event) event.preventDefault();
+                modalBox.style.transform = `translateY(${deltaY}px)`;
+                const opacity = Math.max(0.4, 1 - deltaY / 600);
+                modalBox.style.opacity = opacity;
+            }
+        }
+
+        function endDrag() {
+            if (!isDraggingModal) return;
+            isDraggingModal = false;
+            const deltaY = currentY - startY;
+            if (deltaY > 120 && modalInitialScrollTop <= 5) {
+                closeModalWithAnimation();
+            } else {
+                snapBackModal();
+            }
+            startY = 0;
+            currentY = 0;
+        }
+
+        modalBox.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) return;
+            if (zoomScale > 1.01 && e.target.closest('.swiper')) return;
+            startDrag(e.touches[0].clientY);
+        }, { passive: true });
+        
+        modalBox.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) return;
+            if (isPinching || isPanningZoom) return;
+            moveDrag(e.touches[0].clientY, e);
+        }, { passive: false });
+        
+        modalBox.addEventListener('touchend', endDrag);
+
+        modalBox.addEventListener('mousedown', (e) => {
+            if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.swiper-button-next') || e.target.closest('.swiper-button-prev') || e.target.closest('.swiper-wrapper')) return;
+            startDrag(e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!isDraggingModal) return;
+            moveDrag(e.clientY, null);
+        });
+        window.addEventListener('mouseup', endDrag);
+
+        let wheelAccumulator = 0;
+        let wheelResetTimer = null;
+        let isWheelDragging = false;
+
+        modalBox.addEventListener('wheel', (e) => {
+            if (e.ctrlKey) return;
+            if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+            if (modalBox.scrollTop > 0) {
+                wheelAccumulator = 0;
+                isWheelDragging = false;
+                return;
+            }
+            const swipeDownDirection = TRACKPAD_NATURAL_DOWN ? -e.deltaY : e.deltaY;
+            if (swipeDownDirection < 0) {
+                if (wheelAccumulator > 0) {
+                    wheelAccumulator = 0;
+                    isWheelDragging = false;
+                    snapBackModal();
+                }
+                return;
+            }
+            e.preventDefault();
+            wheelAccumulator += swipeDownDirection;
+            isWheelDragging = true;
+            const translateY = Math.min(wheelAccumulator, 500);
+            modalBox.style.transition = 'none';
+            modalBox.style.transform = `translateY(${translateY}px)`;
+            const opacity = Math.max(0.4, 1 - translateY / 600);
+            modalBox.style.opacity = opacity;
+
+            clearTimeout(wheelResetTimer);
+            if (wheelAccumulator > 180) {
+                wheelResetTimer = setTimeout(() => {
+                    isWheelDragging = false;
+                    wheelAccumulator = 0;
+                    closeModalWithAnimation();
+                }, 150);
+                return;
+            }
+            wheelResetTimer = setTimeout(() => {
+                if (isWheelDragging) {
+                    wheelAccumulator = 0;
+                    isWheelDragging = false;
+                    snapBackModal();
+                }
+            }, 120);
+        }, { passive: false });
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            if (modalId === 'productModal') {
+                resetModalPosition();
+                resetZoom();
+                if (swiperInstance) {
+                    try { swiperInstance.enable(); } catch(e) {}
+                }
+                wheelAccumulator = 0;
+                isWheelDragging = false;
+                document.body.style.overflow = '';
+            }
+        }
+
+        function openProductForm(id = null) {
+            const formModal = document.getElementById('productFormModal');
+            const form = document.getElementById('productForm');
+            const title = document.getElementById('formTitle');
+            
+            form.reset();
+            document.getElementById('editProductId').value = '';
+            currentEditingImages = [];
+
+            if (id) {
+                const product = products.find(p => String(p.id) === String(id));
+                if (product) {
+                    title.innerText = 'تعديل المنتج';
+                    document.getElementById('editProductId').value = product.id;
+                    document.getElementById('prodName').value = product.name;
+                    document.getElementById('prodPrice').value = product.price;
+                    document.getElementById('prodDesc').value = product.description;
+                    currentEditingImages = product.images ? [...product.images] : [];
+                }
+            } else {
+                title.innerText = 'إضافة منتج جديد';
+            }
+            
+            renderImagePreviews();
+            formModal.classList.remove('hidden');
+        }
+
+        document.getElementById('prodImagesUpload').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (!files.length) return;
+            Array.from(files).forEach(file => {
+                compressImage(file, function(compressedDataUrl) {
+                    currentEditingImages.push(compressedDataUrl);
+                    renderImagePreviews();
+                });
+            });
+            this.value = ''; 
+        });
+
+        function addImageUrl() {
+            const urlInput = document.getElementById('prodImageUrl');
+            const url = urlInput.value.trim();
+            if (url) {
+                currentEditingImages.push(url);
+                renderImagePreviews();
+                urlInput.value = '';
+            }
+        }
+
+        function renderImagePreviews() {
+            const container = document.getElementById('imagePreviewContainer');
+            container.innerHTML = '';
+            if (currentEditingImages.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-xs w-full text-center">لم يتم إضافة صور بعد.</p>';
+                return;
+            }
+            currentEditingImages.forEach((imgUrl, index) => {
+                const div = document.createElement('div');
+                div.className = 'preview-img-container';
+                div.innerHTML = `
+                    <img src="${imgUrl}" alt="Preview">
+                    <button type="button" class="delete-preview-btn" onclick="removeEditingImage(${index})">×</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function removeEditingImage(index) {
+            currentEditingImages.splice(index, 1);
+            renderImagePreviews();
+        }
+
+        document.getElementById('productForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (currentEditingImages.length === 0) {
+                alert('يجب إضافة صورة واحدة على الأقل للمنتج!');
+                return;
+            }
+            const id = document.getElementById('editProductId').value;
+            const productData = {
+                name: document.getElementById('prodName').value,
+                price: document.getElementById('prodPrice').value,
+                images: currentEditingImages,
+                description: document.getElementById('prodDesc').value
+            };
+            if (id) {
+                const index = products.findIndex(p => String(p.id) === String(id));
+                if (index > -1) {
+                    products[index] = { ...products[index], ...productData };
+                    showToast('تم تعديل المنتج بنجاح!');
+                }
+            } else {
+                productData.id = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                products.push(productData);
+                showToast('تمت إضافة المنتج بنجاح!');
+            }
+            saveProducts();
+            closeModal('productFormModal');
+        });
+
+        function deleteProduct(id) {
+            if (confirm('هل أنت متأكد من حذف هذا المنتج نهائياً؟')) {
+                products = products.filter(p => String(p.id) !== String(id));
+                saveProducts();
+                showToast('تم حذف المنتج.');
+            }
+        }
+
+        function saveProducts() {
+            try {
+                localStorage.setItem('baytAlOudProducts', JSON.stringify(products));
+                renderProducts();
+            } catch (error) {
+                console.error("خطأ في الحفظ:", error);
+                alert('عذراً، مساحة التخزين ممتلئة!');
+            }
+        }
+
+        function updateVideo() {
+            const url = document.getElementById('videoUrlInput').value.trim();
+            if (url) {
+                renderVideo(url);
+                localStorage.setItem('baytAlOudVideo', url);
+                document.getElementById('videoUrlInput').value = '';
+                showToast('تم تحديث الفيديو بنجاح!');
+            } else {
+                alert('من فضلك ضع رابط الفيديو أولاً.');
+            }
+        }
+
+        window.onload = () => {
+            applyAdminMode();
+            loadLogo();
+            
+            const savedVideo = localStorage.getItem('baytAlOudVideo');
+            if (savedVideo) {
+                renderVideo(savedVideo);
+            } else {
+                renderVideo('https://www.youtube.com/embed/dQw4w9WgXcQ');
+            }
+            
+            renderProducts();
+        };
+
+    </script>
+</body>
+</html>
