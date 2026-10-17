@@ -224,8 +224,7 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // تم إضافة setDoc و getDoc عشان نحفظ اللوجو والفيديو في السحابة
-        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBRjh27bUMY5JcNJbqS961T4_xDhE1WumQ",
@@ -239,8 +238,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const productsCollection = collection(db, "products"); 
-        
-        // مستند جديد في قاعدة البيانات مخصص لإعدادات الموقع (اللوجو والفيديو)
         const settingsDocRef = doc(db, "settings", "site_config");
 
         const SITE_URL = 'https://eprahemsabry125-netizen.github.io/The_Arab_Oud_House/';
@@ -248,6 +245,9 @@
         let isAdmin = false;
         let swiperInstance = null;
         let products = []; 
+        
+        // ✅ إصلاح الخطأ: تعريف المتغير ده اللي كان ناقص ومسبب تعطيل الزرار
+        let currentEditingImages = []; 
 
         window.toggleDrawer = function() {
             const drawer = document.getElementById('sideDrawer');
@@ -282,10 +282,10 @@
             const container = document.getElementById('qrcode');
             container.innerHTML = '';
             new QRCode(container, { text: SITE_URL, width: 240, height: 240, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
-            const savedLogo = document.getElementById('siteLogo').src; // بنجيب اللوجو من الصفحة نفسها
+            const savedLogo = document.getElementById('siteLogo').src; 
             const qrLogoImg = document.getElementById('qrLogoImg');
             const qrLogoText = document.getElementById('qrLogoText');
-            if (savedLogo && savedLogo !== window.location.href) { // لو فيه لوجو متحمل
+            if (savedLogo && savedLogo !== window.location.href) { 
                 qrLogoImg.src = savedLogo; qrLogoImg.classList.remove('hidden'); qrLogoText.classList.add('hidden'); 
             } 
             else { qrLogoImg.classList.add('hidden'); qrLogoText.classList.remove('hidden'); }
@@ -325,7 +325,6 @@
             container.innerHTML = `<iframe src="${url}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
         }
 
-        // حفظ الفيديو في Firebase
         window.updateVideo = async function() {
             const url = document.getElementById('videoUrlInput').value.trim();
             if (url) { 
@@ -357,7 +356,6 @@
             reader.readAsDataURL(file);
         }
 
-        // حفظ اللوجو في Firebase
         document.getElementById('logoUpload').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             compressImage(file, async function(compressedDataUrl) {
@@ -372,7 +370,6 @@
             this.value = '';
         });
 
-        // حذف اللوجو من Firebase
         window.removeLogo = async function() {
             if (confirm('هل أنت متأكد من حذف الشعار؟')) {
                 document.getElementById('siteLogo').src = '';
@@ -385,7 +382,6 @@
             }
         };
 
-        // تحميل الإعدادات (اللوجو والفيديو) من Firebase
         function loadSettings() {
             onSnapshot(settingsDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -617,8 +613,8 @@
 
         window.onload = () => {
             applyAdminMode();
-            loadSettings(); // بنحمل اللوجو والفيديو من السحابة
-            loadProductsFromFirebase(); // بنحمل المنتجات من السحابة
+            loadSettings(); 
+            loadProductsFromFirebase(); 
         };
     </script>
 </body>
