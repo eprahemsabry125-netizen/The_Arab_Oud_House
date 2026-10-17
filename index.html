@@ -224,9 +224,9 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // تم إضافة setDoc و getDoc عشان نحفظ اللوجو والفيديو في السحابة
+        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ✅ كود Firebase الخاص بك
         const firebaseConfig = {
             apiKey: "AIzaSyBRjh27bUMY5JcNJbqS961T4_xDhE1WumQ",
             authDomain: "the-arab-oud-house.firebaseapp.com",
@@ -239,6 +239,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const productsCollection = collection(db, "products"); 
+        
+        // مستند جديد في قاعدة البيانات مخصص لإعدادات الموقع (اللوجو والفيديو)
+        const settingsDocRef = doc(db, "settings", "site_config");
 
         const SITE_URL = 'https://eprahemsabry125-netizen.github.io/The_Arab_Oud_House/';
         const ADMIN_PASSWORD = '55555';
@@ -279,10 +282,12 @@
             const container = document.getElementById('qrcode');
             container.innerHTML = '';
             new QRCode(container, { text: SITE_URL, width: 240, height: 240, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
-            const savedLogo = localStorage.getItem('baytAlOudLogo');
+            const savedLogo = document.getElementById('siteLogo').src; // بنجيب اللوجو من الصفحة نفسها
             const qrLogoImg = document.getElementById('qrLogoImg');
             const qrLogoText = document.getElementById('qrLogoText');
-            if (savedLogo) { qrLogoImg.src = savedLogo; qrLogoImg.classList.remove('hidden'); qrLogoText.classList.add('hidden'); } 
+            if (savedLogo && savedLogo !== window.location.href) { // لو فيه لوجو متحمل
+                qrLogoImg.src = savedLogo; qrLogoImg.classList.remove('hidden'); qrLogoText.classList.add('hidden'); 
+            } 
             else { qrLogoImg.classList.add('hidden'); qrLogoText.classList.remove('hidden'); }
         }
 
@@ -320,9 +325,17 @@
             container.innerHTML = `<iframe src="${url}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
         }
 
-        window.updateVideo = function() {
+        // حفظ الفيديو في Firebase
+        window.updateVideo = async function() {
             const url = document.getElementById('videoUrlInput').value.trim();
-            if (url) { renderVideo(url); localStorage.setItem('baytAlOudVideo', url); document.getElementById('videoUrlInput').value = ''; showToast('تم تحديث الفيديو بنجاح!'); } 
+            if (url) { 
+                renderVideo(url); 
+                document.getElementById('videoUrlInput').value = ''; 
+                try {
+                    await setDoc(settingsDocRef, { videoUrl: url }, { merge: true });
+                    showToast('تم حفظ الفيديو للجميع!'); 
+                } catch(e) { console.error(e); showToast('فشل الحفظ', 'fa-exclamation-circle'); }
+            } 
             else { alert('من فضلك ضع رابط الفيديو أولاً.'); }
         };
 
@@ -344,28 +357,57 @@
             reader.readAsDataURL(file);
         }
 
+        // حفظ اللوجو في Firebase
         document.getElementById('logoUpload').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
-            compressImage(file, function(compressedDataUrl) {
+            compressImage(file, async function(compressedDataUrl) {
                 document.getElementById('siteLogo').src = compressedDataUrl;
                 document.getElementById('siteLogo').classList.remove('hidden');
                 document.getElementById('siteTitle').classList.add('hidden');
-                localStorage.setItem('baytAlOudLogo', compressedDataUrl);
-                showToast('تم رفع الشعار بنجاح!');
+                try {
+                    await setDoc(settingsDocRef, { logoUrl: compressedDataUrl }, { merge: true });
+                    showToast('تم حفظ الشعار للجميع!');
+                } catch(e) { console.error(e); showToast('فشل حفظ الشعار', 'fa-exclamation-circle'); }
             });
             this.value = '';
         });
 
-        window.removeLogo = function() {
+        // حذف اللوجو من Firebase
+        window.removeLogo = async function() {
             if (confirm('هل أنت متأكد من حذف الشعار؟')) {
-                localStorage.removeItem('baytAlOudLogo'); document.getElementById('siteLogo').src = '';
-                document.getElementById('siteLogo').classList.add('hidden'); document.getElementById('siteTitle').classList.remove('hidden'); showToast('تم حذف الشعار.');
+                document.getElementById('siteLogo').src = '';
+                document.getElementById('siteLogo').classList.add('hidden'); 
+                document.getElementById('siteTitle').classList.remove('hidden'); 
+                try {
+                    await setDoc(settingsDocRef, { logoUrl: "" }, { merge: true });
+                    showToast('تم حذف الشعار.');
+                } catch(e) { console.error(e); }
             }
         };
 
-        function loadLogo() {
-            const savedLogo = localStorage.getItem('baytAlOudLogo');
-            if (savedLogo) { document.getElementById('siteLogo').src = savedLogo; document.getElementById('siteLogo').classList.remove('hidden'); document.getElementById('siteTitle').classList.add('hidden'); }
+        // تحميل الإعدادات (اللوجو والفيديو) من Firebase
+        function loadSettings() {
+            onSnapshot(settingsDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.logoUrl) {
+                        document.getElementById('siteLogo').src = data.logoUrl;
+                        document.getElementById('siteLogo').classList.remove('hidden');
+                        document.getElementById('siteTitle').classList.add('hidden');
+                    } else {
+                        document.getElementById('siteLogo').src = '';
+                        document.getElementById('siteLogo').classList.add('hidden');
+                        document.getElementById('siteTitle').classList.remove('hidden');
+                    }
+                    if (data.videoUrl) {
+                        renderVideo(data.videoUrl);
+                    } else {
+                        renderVideo('https://www.youtube.com/embed/dQw4w9WgXcQ');
+                    }
+                } else {
+                    renderVideo('https://www.youtube.com/embed/dQw4w9WgXcQ');
+                }
+            });
         }
 
         window.loginAdmin = function() {
@@ -575,10 +617,8 @@
 
         window.onload = () => {
             applyAdminMode();
-            loadLogo();
-            const savedVideo = localStorage.getItem('baytAlOudVideo');
-            if (savedVideo) { renderVideo(savedVideo); } else { renderVideo('https://www.youtube.com/embed/dQw4w9WgXcQ'); }
-            loadProductsFromFirebase(); 
+            loadSettings(); // بنحمل اللوجو والفيديو من السحابة
+            loadProductsFromFirebase(); // بنحمل المنتجات من السحابة
         };
     </script>
 </body>
