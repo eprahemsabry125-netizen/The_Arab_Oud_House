@@ -22,7 +22,7 @@
         #secretAdminBtn { opacity: 0.1; transition: opacity 0.3s; }
         #secretAdminBtn:hover { opacity: 1; }
         
-        /* اللوجو بحواف دائرية والحفاظ على الطول */
+        /* اللوجو بحواف دائرية */
         #siteLogo { border-radius: 2rem; } 
         
         .preview-img-container { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #555; }
@@ -164,7 +164,7 @@
     <section id="video-section" class="py-8 px-4 text-center">
         <div id="videoContainer" class="max-w-4xl mx-auto relative aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 shadow-lg"></div>
         <div id="videoEditArea" class="admin-only max-w-3xl mx-auto mt-4 flex-col gap-3 bg-neutral-900 p-4 rounded-lg border border-gray-700">
-            <p class="text-gray-400 text-xs mb-1">يدعم يوتيوب، فيميو، أو رابط فيديو مباشر.</p>
+            <p class="text-gray-400 text-xs mb-1">يدعم يوتيوب، فيميو، جوجل درايف، أو رابط فيديو مباشر (MP4).</p>
             <div class="flex flex-col sm:flex-row gap-2">
                 <input type="text" id="videoUrlInput" placeholder="ضع رابط الفيديو هنا..." class="flex-1 bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border">
                 <button onclick="updateVideo()" class="gold-bg text-black font-bold px-6 py-3 rounded hover:bg-yellow-600 transition">حفظ الفيديو</button>
@@ -222,7 +222,7 @@
         </div>
     </div>
 
-    <!-- Modal: Site Settings (90% Control) -->
+    <!-- Modal: Site Settings -->
     <div id="siteSettingsModal" class="fixed inset-0 bg-black bg-opacity-95 hidden items-center justify-center p-4 z-[90]">
         <div class="bg-neutral-900 border border-gold-border rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
             <button onclick="closeModal('siteSettingsModal')" class="absolute top-4 left-4 text-gray-400 hover:text-white text-2xl">&times;</button>
@@ -358,21 +358,62 @@
             try { await navigator.clipboard.writeText(SITE_URL); showToast('تم نسخ رابط الموقع بنجاح!', 'fa-check-circle'); } catch (err) { /* ... */ }
         };
 
-        // --- إدارة الفيديو ---
+        // --- إدارة الفيديو (بيشمل يوتيوب، فيميو، جوجل درايف، وأي رابط مباشر) ---
         function renderVideo(url) {
             const container = document.getElementById('videoContainer');
-            if (!url) { container.innerHTML = '<p class="text-gray-500">لم يتم إضافة فيديو بعد.</p>'; return; }
-            const urlLower = url.toLowerCase();
-            if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
-                let embedUrl = url.includes('watch?v=') ? url.replace('watch?v=', 'embed/') : (url.includes('youtu.be/') ? url.replace('youtu.be/', 'www.youtube.com/embed/') : url);
-                embedUrl = embedUrl.split('?')[0].split('&')[0] + '?autoplay=1&mute=1&loop=1&playlist=' + embedUrl.split('/').pop() + '&rel=0';
-                container.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen class="w-full h-full absolute top-0 left-0 border-0"></iframe>`;
-                container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
-            } else if (urlLower.includes('vimeo.com')) { /* ... */ } 
-            else if (urlLower.match(/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/)) {
-                container.className = 'max-w-4xl mx-auto bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
-                container.innerHTML = `<video autoplay muted loop playsinline preload="metadata" class="w-full max-h-[70vh] mx-auto"><source src="${url}"></video>`;
+            if (!url) { 
+                container.className = 'max-w-4xl mx-auto relative aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 shadow-lg flex items-center justify-center'; 
+                container.innerHTML = '<p class="text-gray-500">لم يتم إضافة فيديو بعد.</p>'; 
+                return; 
             }
+            
+            const urlLower = url.toLowerCase();
+
+            // 1. يوتيوب
+            if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
+                let embedUrl = url; 
+                if (url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/'); 
+                else if (url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'www.youtube.com/embed/');
+                embedUrl = embedUrl.split('?')[0].split('&')[0]; 
+                embedUrl += '?autoplay=1&mute=1&loop=1&playlist=' + embedUrl.split('/').pop() + '&rel=0';
+                container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
+                container.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; 
+                return;
+            }
+
+            // 2. فيميو
+            if (urlLower.includes('vimeo.com')) {
+                const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+                if (match) { 
+                    container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg'; 
+                    container.innerHTML = `<iframe src="https://player.vimeo.com/video/${match[1]}?autoplay=1&muted=1&loop=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`; 
+                    return; 
+                }
+            }
+
+            // 3. جوجل درايف
+            if (urlLower.includes('drive.google.com')) {
+                let fileId = '';
+                if (url.includes('/file/d/')) { fileId = url.split('/file/d/')[1].split('/')[0]; }
+                else if (url.includes('id=')) { fileId = url.split('id=')[1].split('&')[0]; }
+                
+                if (fileId) {
+                    container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
+                    container.innerHTML = `<iframe src="https://drive.google.com/file/d/${fileId}/preview" allow="autoplay; fullscreen" allowfullscreen></iframe>`; 
+                    return;
+                }
+            }
+
+            // 4. فيديو مباشر
+            if (urlLower.match(/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/)) {
+                container.className = 'max-w-4xl mx-auto bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
+                container.innerHTML = `<video autoplay muted loop playsinline preload="metadata" class="w-full max-h-[70vh] mx-auto"><source src="${url}">متصفحك لا يدعم تشغيل هذا الفيديو.</video>`; 
+                return;
+            }
+
+            // 5. أي رابط آخر
+            container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
+            container.innerHTML = `<iframe src="${url}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
         }
         window.updateVideo = async function() {
             const url = document.getElementById('videoUrlInput').value.trim();
@@ -380,7 +421,7 @@
         };
 
         // --- ضغط الصور واللوجو ---
-        function compressImage(file, callback) { /* ... كود ضغط الصور المعتاد ... */ 
+        function compressImage(file, callback) { 
             const reader = new FileReader(); reader.onload = function(e) {
                 const img = new Image(); img.onload = function() {
                     const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
@@ -404,7 +445,7 @@
             }
         };
 
-        // --- إعدادات الموقع (التحكم في 90%) ---
+        // --- إعدادات الموقع ---
         window.openSiteSettings = async function() {
             const docSnap = await getDoc(settingsDocRef);
             if (docSnap.exists()) {
@@ -434,23 +475,15 @@
             } catch(e) { console.error(e); showToast('حدث خطأ', 'fa-exclamation-circle'); }
         });
 
-        // --- تحميل الإعدادات من Firebase للجميع ---
+        // --- تحميل الإعدادات من Firebase ---
         function loadSettings() {
             onSnapshot(settingsDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    
-                    // اللوجو
                     if (data.logoUrl) { document.getElementById('siteLogo').src = data.logoUrl; document.getElementById('siteLogo').classList.remove('hidden'); document.getElementById('siteTitle').classList.add('hidden'); } 
                     else { document.getElementById('siteLogo').classList.add('hidden'); document.getElementById('siteTitle').classList.remove('hidden'); }
-                    
-                    // اسم الموقع
                     if (data.siteTitle) { document.getElementById('siteTitle').innerText = data.siteTitle; document.title = data.siteTitle + ' | عطور فاخرة'; }
-
-                    // الفيديو
                     if (data.videoUrl) renderVideo(data.videoUrl); else renderVideo('https://www.youtube.com/embed/dQw4w9WgXcQ');
-                    
-                    // الواتساب والسوشيال
                     if (data.whatsappNumber) {
                         const waLink = `https://wa.me/${data.whatsappNumber}?text=مرحباً، أريد الاستفسار عن المنتجات`;
                         document.getElementById('drawerWhatsappLink').href = waLink;
@@ -463,7 +496,7 @@
             });
         }
 
-        // --- تسجيل الدخول (Auth) ---
+        // --- تسجيل الدخول ---
         window.loginAdmin = function() {
             document.getElementById('adminLoginModal').classList.remove('hidden');
             document.getElementById('adminLoginModal').classList.add('flex');
@@ -507,7 +540,7 @@
             renderProducts();
         }
 
-        // --- عرض المنتجات ---
+        // --- المنتجات ---
         function loadProductsFromFirebase() {
             onSnapshot(productsCollection, (snapshot) => {
                 products = [];
@@ -531,10 +564,6 @@
             });
         }
 
-        // --- تفاصيل المنتج والزوم والسحب ---
-        // ... (باقي كود الزوم والسوايبر والسحب كما هو، لم يتغير فيه شئ) ...
-        // لقد اختصرت الكود هنا في الشرح لتوفير المساحة، ولكنه موجود كاملاً في الملف الفعلي الذي ستعتمده.
-
         window.showProductDetails = function(id) {
             if (isAdmin) return;
             const product = products.find(p => String(p.id) === String(id)); if (!product) return;
@@ -547,12 +576,11 @@
                 slide.innerHTML = `<img src="${imgUrl}" class="zoomable-image" draggable="false">`; wrapper.appendChild(slide);
             });
             if (swiperInstance) swiperInstance.destroy(true, true);
-            // ... (كود تهيئة السوايبر) ...
+            swiperInstance = new Swiper(".mySwiper", { loop: false, grabCursor: true, mousewheel: { forceToAxis: true, sensitivity: 1, releaseOnEdges: true }, pagination: { el: ".swiper-pagination", clickable: true }, navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" } });
             document.getElementById('productModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         };
 
-        // --- حفظ المنتج (إضافة/تعديل) ---
         window.openProductForm = function(id = null) {
             const formModal = document.getElementById('productFormModal'); const form = document.getElementById('productForm'); const title = document.getElementById('formTitle');
             form.reset(); document.getElementById('editProductId').value = ''; currentEditingImages = [];
