@@ -177,7 +177,8 @@
             <h2 class="text-2xl font-bold gold-text">مجموعة العطور</h2>
             <button id="addProductBtn" onclick="openProductForm()" class="admin-only gold-bg text-black font-bold px-6 py-2 rounded hover:bg-yellow-600 transition shadow-lg">+ إضافة منتج جديد</button>
         </div>
-        <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+        <!-- هنا التعديل: خليت الشاشات الصغيرة (الموبايل) تعرض عمودين بدل عمود واحد -->
+        <div id="productsGrid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6"></div>
     </section>
 
     <footer class="py-8 text-center text-gray-600 text-sm border-t border-gray-800 relative mt-10">
@@ -331,7 +332,7 @@
         let currentEditingImages = []; 
 
         // --- الوظائف الأساسية للواجهة ---
-        window.toggleDrawer = function() { /* ... */ 
+        window.toggleDrawer = function() { 
             const drawer = document.getElementById('sideDrawer'), overlay = document.getElementById('drawerOverlay'), btn = document.getElementById('hamburgerBtn');
             if (drawer.classList.contains('active')) { closeDrawer(); } else { drawer.classList.add('active'); overlay.classList.add('active'); btn.classList.add('active'); document.body.style.overflow = 'hidden'; }
         };
@@ -358,60 +359,34 @@
             try { await navigator.clipboard.writeText(SITE_URL); showToast('تم نسخ رابط الموقع بنجاح!', 'fa-check-circle'); } catch (err) { /* ... */ }
         };
 
-        // --- إدارة الفيديو (بيشمل يوتيوب، فيميو، جوجل درايف، وأي رابط مباشر) ---
+        // --- إدارة الفيديو ---
         function renderVideo(url) {
             const container = document.getElementById('videoContainer');
-            if (!url) { 
-                container.className = 'max-w-4xl mx-auto relative aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 shadow-lg flex items-center justify-center'; 
-                container.innerHTML = '<p class="text-gray-500">لم يتم إضافة فيديو بعد.</p>'; 
-                return; 
-            }
-            
+            if (!url) { container.className = 'max-w-4xl mx-auto relative aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 shadow-lg flex items-center justify-center'; container.innerHTML = '<p class="text-gray-500">لم يتم إضافة فيديو بعد.</p>'; return; }
             const urlLower = url.toLowerCase();
-
-            // 1. يوتيوب
             if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
-                let embedUrl = url; 
-                if (url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/'); 
-                else if (url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'www.youtube.com/embed/');
-                embedUrl = embedUrl.split('?')[0].split('&')[0]; 
-                embedUrl += '?autoplay=1&mute=1&loop=1&playlist=' + embedUrl.split('/').pop() + '&rel=0';
+                let embedUrl = url; if (url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/'); else if (url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'www.youtube.com/embed/');
+                embedUrl = embedUrl.split('?')[0].split('&')[0]; embedUrl += '?autoplay=1&mute=1&loop=1&playlist=' + embedUrl.split('/').pop() + '&rel=0';
                 container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
-                container.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; 
-                return;
+                container.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; return;
             }
-
-            // 2. فيميو
             if (urlLower.includes('vimeo.com')) {
                 const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-                if (match) { 
-                    container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg'; 
-                    container.innerHTML = `<iframe src="https://player.vimeo.com/video/${match[1]}?autoplay=1&muted=1&loop=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`; 
-                    return; 
-                }
+                if (match) { container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg'; container.innerHTML = `<iframe src="https://player.vimeo.com/video/${match[1]}?autoplay=1&muted=1&loop=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`; return; }
             }
-
-            // 3. جوجل درايف
             if (urlLower.includes('drive.google.com')) {
                 let fileId = '';
                 if (url.includes('/file/d/')) { fileId = url.split('/file/d/')[1].split('/')[0]; }
                 else if (url.includes('id=')) { fileId = url.split('id=')[1].split('&')[0]; }
-                
                 if (fileId) {
                     container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
-                    container.innerHTML = `<iframe src="https://drive.google.com/file/d/${fileId}/preview" allow="autoplay; fullscreen" allowfullscreen></iframe>`; 
-                    return;
+                    container.innerHTML = `<iframe src="https://drive.google.com/file/d/${fileId}/preview" allow="autoplay; fullscreen" allowfullscreen></iframe>`; return;
                 }
             }
-
-            // 4. فيديو مباشر
             if (urlLower.match(/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/)) {
                 container.className = 'max-w-4xl mx-auto bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
-                container.innerHTML = `<video autoplay muted loop playsinline preload="metadata" class="w-full max-h-[70vh] mx-auto"><source src="${url}">متصفحك لا يدعم تشغيل هذا الفيديو.</video>`; 
-                return;
+                container.innerHTML = `<video autoplay muted loop playsinline preload="metadata" class="w-full max-h-[70vh] mx-auto"><source src="${url}"></video>`; return;
             }
-
-            // 5. أي رابط آخر
             container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
             container.innerHTML = `<iframe src="${url}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
         }
@@ -420,7 +395,7 @@
             if (url) { renderVideo(url); document.getElementById('videoUrlInput').value = ''; try { await setDoc(settingsDocRef, { videoUrl: url }, { merge: true }); showToast('تم حفظ الفيديو!'); } catch(e) { console.error(e); } }
         };
 
-        // --- ضغط الصور واللوجو ---
+        // --- ضغط الصور ---
         function compressImage(file, callback) { 
             const reader = new FileReader(); reader.onload = function(e) {
                 const img = new Image(); img.onload = function() {
@@ -554,12 +529,21 @@
             products.forEach(product => {
                 const card = document.createElement('div');
                 card.className = 'product-card bg-neutral-900 border border-gray-800 rounded-lg overflow-hidden shadow-lg flex flex-col';
-                let adminButtons = isAdmin ? `<div class="absolute top-2 right-2 flex gap-2 z-10"><button onclick="event.stopPropagation(); openProductForm('${product.id}')" class="bg-blue-600 text-white w-10 h-10 rounded-full hover:bg-blue-700 shadow-lg">✎</button><button onclick="event.stopPropagation(); deleteProduct('${product.id}')" class="bg-red-600 text-white w-10 h-10 rounded-full hover:bg-red-700 shadow-lg">🗑</button></div>` : '';
+                
+                let adminButtons = isAdmin ? `<div class="absolute top-2 right-2 flex gap-2 z-10"><button onclick="event.stopPropagation(); openProductForm('${product.id}')" class="bg-blue-600 text-white w-8 h-8 sm:w-10 sm:h-10 rounded-full hover:bg-blue-700 shadow-lg text-xs sm:text-base">✎</button><button onclick="event.stopPropagation(); deleteProduct('${product.id}')" class="bg-red-600 text-white w-8 h-8 sm:w-10 sm:h-10 rounded-full hover:bg-red-700 shadow-lg text-xs sm:text-base">🗑</button></div>` : '';
+                
                 const mainImage = product.images && product.images.length > 0 ? product.images[0] : 'https://placehold.co/300x400/1a1a1a/D4AF37?text=No+Image';
+                
+                // تم تصغير حجم الصور والخطوط عشان تناسب عرض عمودين على الموبايل
                 card.innerHTML = `
                     ${adminButtons}
-                    <div class="h-64 overflow-hidden cursor-pointer" onclick="showProductDetails('${product.id}')"><img src="${mainImage}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"></div>
-                    <div class="p-4 text-center cursor-pointer flex-grow flex flex-col justify-between" onclick="showProductDetails('${product.id}')"><h3 class="text-lg font-bold text-white mb-2">${product.name}</h3><p class="gold-text font-bold text-xl">${product.price} ج.م</p></div>`;
+                    <div class="h-40 sm:h-64 overflow-hidden cursor-pointer" onclick="showProductDetails('${product.id}')">
+                        <img src="${mainImage}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-110">
+                    </div>
+                    <div class="p-2 sm:p-4 text-center cursor-pointer flex-grow flex flex-col justify-between" onclick="showProductDetails('${product.id}')">
+                        <h3 class="text-sm sm:text-lg font-bold text-white mb-1 sm:mb-2 leading-tight">${product.name}</h3>
+                        <p class="gold-text font-bold text-base sm:text-xl">${product.price} ج.م</p>
+                    </div>`;
                 grid.appendChild(card);
             });
         }
@@ -571,10 +555,14 @@
             document.getElementById('modalPrice').innerText = `${product.price} ج.م`;
             document.getElementById('modalDesc').innerText = product.description;
             const wrapper = document.getElementById('modalImagesWrapper'); wrapper.innerHTML = '';
-            (product.images || []).forEach(imgUrl => {
-                const slide = document.createElement('div'); slide.className = 'swiper-slide'; slide.style.height = '400px';
-                slide.innerHTML = `<img src="${imgUrl}" class="zoomable-image" draggable="false">`; wrapper.appendChild(slide);
-            });
+            const images = product.images || [];
+            if (images.length === 0) { wrapper.innerHTML = '<div class="swiper-slide" style="height:400px;"><img src="https://placehold.co/600x400/1a1a1a/D4AF37?text=No+Image" class="zoomable-image"></div>'; } 
+            else {
+                images.forEach(imgUrl => {
+                    const slide = document.createElement('div'); slide.className = 'swiper-slide'; slide.style.height = '400px';
+                    slide.innerHTML = `<img src="${imgUrl}" class="zoomable-image" draggable="false">`; wrapper.appendChild(slide);
+                });
+            }
             if (swiperInstance) swiperInstance.destroy(true, true);
             swiperInstance = new Swiper(".mySwiper", { loop: false, grabCursor: true, mousewheel: { forceToAxis: true, sensitivity: 1, releaseOnEdges: true }, pagination: { el: ".swiper-pagination", clickable: true }, navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" } });
             document.getElementById('productModal').classList.remove('hidden');
