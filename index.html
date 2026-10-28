@@ -166,7 +166,7 @@
         <div id="videoEditArea" class="admin-only max-w-3xl mx-auto mt-4 flex-col gap-3 bg-neutral-900 p-4 rounded-lg border border-gray-700">
             <p class="text-gray-400 text-xs mb-1">يدعم يوتيوب، فيميو، جوجل درايف، أو رابط فيديو مباشر (MP4).</p>
             <div class="flex flex-col sm:flex-row gap-2">
-                <input type="text" id="videoUrlInput" placeholder="ضع رابط الفيديو هنا..." class="flex-1 bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border">
+                <input type="text" id="videoUrlInput" placeholder="ضع رابط الفيديو هنا..." class="flex-1 bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" dir="ltr">
                 <button onclick="updateVideo()" class="gold-bg text-black font-bold px-6 py-3 rounded hover:bg-yellow-600 transition">حفظ الفيديو</button>
             </div>
         </div>
@@ -212,11 +212,13 @@
             <form id="adminLoginForm" class="space-y-4">
                 <div>
                     <label class="block text-gray-400 text-sm mb-1">الإيميل</label>
-                    <input type="email" id="adminEmail" required class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border" placeholder="admin@example.com">
+                    <!-- تم التعديل هنا: إضافة dir="ltr" و text-left -->
+                    <input type="email" id="adminEmail" required class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" placeholder="admin@example.com" dir="ltr">
                 </div>
                 <div>
                     <label class="block text-gray-400 text-sm mb-1">كلمة المرور</label>
-                    <input type="password" id="adminPassword" required class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border" placeholder="••••••••">
+                    <!-- تم التعديل هنا: إضافة dir="ltr" و text-left -->
+                    <input type="password" id="adminPassword" required class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" placeholder="••••••••" dir="ltr">
                 </div>
                 <button type="submit" class="w-full gold-bg text-black font-bold py-3 rounded-lg hover:bg-yellow-600 transition mt-2">تسجيل الدخول</button>
             </form>
@@ -235,19 +237,19 @@
                 </div>
                 <div>
                     <label class="block text-gray-400 text-sm mb-1">رقم الواتساب (مثال: 201012345678)</label>
-                    <input type="text" id="setWhatsapp" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border" dir="ltr">
+                    <input type="text" id="setWhatsapp" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" dir="ltr">
                 </div>
                 <div>
                     <label class="block text-gray-400 text-sm mb-1">رابط انستجرام</label>
-                    <input type="url" id="setInsta" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border" dir="ltr">
+                    <input type="url" id="setInsta" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" dir="ltr">
                 </div>
                 <div>
                     <label class="block text-gray-400 text-sm mb-1">رابط فيسبوك</label>
-                    <input type="url" id="setFb" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border" dir="ltr">
+                    <input type="url" id="setFb" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" dir="ltr">
                 </div>
                 <div>
                     <label class="block text-gray-400 text-sm mb-1">رابط تيك توك</label>
-                    <input type="url" id="setTiktok" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border" dir="ltr">
+                    <input type="url" id="setTiktok" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" dir="ltr">
                 </div>
                 <button type="submit" class="w-full gold-bg text-black font-bold py-3 rounded hover:bg-yellow-600 transition mt-4">حفظ الإعدادات</button>
             </form>
@@ -285,7 +287,7 @@
             <form id="productForm" class="space-y-4">
                 <input type="hidden" id="editProductId">
                 <div><label class="block text-gray-400 text-sm mb-1">اسم العطر</label><input type="text" id="prodName" required class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border"></div>
-                <div><label class="block text-gray-400 text-sm mb-1">السعر (ج.م)</label><input type="number" id="prodPrice" required class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border"></div>
+                <div><label class="block text-gray-400 text-sm mb-1">السعر (ج.م)</label><input type="number" id="prodPrice" required class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" dir="ltr"></div>
                 <div class="bg-neutral-800 p-4 rounded-lg border border-gray-700">
                     <label class="block text-gold-text font-bold mb-3">صور المنتج (يمكنك إضافة أكثر من صورة)</label>
                     <div class="mb-4">
@@ -293,7 +295,7 @@
                         <button type="button" onclick="document.getElementById('prodImagesUpload').click()" class="w-full bg-neutral-700 border-2 border-dashed border-gold-border text-white font-bold py-4 rounded-lg hover:bg-neutral-600 transition flex items-center justify-center gap-2"><span>📸</span> اضغط هنا لاختيار صور من ذاكرة الجهاز</button>
                         <p class="text-gray-400 text-xs text-center mt-2">يتم ضغط الصور تلقائياً</p>
                     </div>
-                    <div class="mb-3 flex gap-2"><input type="url" id="prodImageUrl" placeholder="أو ضع رابط صورة..." class="flex-1 bg-neutral-900 border border-gray-600 rounded p-2 text-white text-sm focus:outline-none focus:border-gold-border"><button type="button" onclick="addImageUrl()" class="bg-gray-600 text-white px-4 rounded text-sm hover:bg-gray-500">إضافة</button></div>
+                    <div class="mb-3 flex gap-2"><input type="url" id="prodImageUrl" placeholder="أو ضع رابط صورة..." class="flex-1 bg-neutral-900 border border-gray-600 rounded p-2 text-white text-sm focus:outline-none focus:border-gold-border text-left" dir="ltr"><button type="button" onclick="addImageUrl()" class="bg-gray-600 text-white px-4 rounded text-sm hover:bg-gray-500">إضافة</button></div>
                     <div id="imagePreviewContainer" class="flex flex-wrap gap-3 mt-4"></div>
                 </div>
                 <div><label class="block text-gray-400 text-sm mb-1">وصف العطر وتفاصيله</label><textarea id="prodDesc" required rows="3" class="w-full bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border"></textarea></div>
@@ -534,7 +536,6 @@
                 
                 const mainImage = product.images && product.images.length > 0 ? product.images[0] : 'https://placehold.co/300x400/1a1a1a/D4AF37?text=No+Image';
                 
-                // تم تصغير حجم الصور والخطوط عشان تناسب عرض عمودين على الموبايل
                 card.innerHTML = `
                     ${adminButtons}
                     <div class="h-40 sm:h-64 overflow-hidden cursor-pointer" onclick="showProductDetails('${product.id}')">
