@@ -41,10 +41,7 @@
         #videoContainer video { width: 100%; max-height: 70vh; background-color: #000; display: block; }
         #videoContainer iframe { width: 100%; height: 100%; position: absolute; top: 0; left: 0; border: 0; }
         
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .animate-login { animation: modalFadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
 
         .hamburger-btn { position: fixed; top: 20px; right: 20px; z-index: 60; width: 50px; height: 50px; background: rgba(15, 15, 15, 0.9); border: 1.5px solid #D4AF37; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
@@ -157,11 +154,27 @@
 
     <section id="video-section" class="py-8 px-4 text-center">
         <div id="videoContainer" class="max-w-4xl mx-auto relative aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 shadow-lg"></div>
+        
         <div id="videoEditArea" class="admin-only max-w-3xl mx-auto mt-4 flex-col gap-3 bg-neutral-900 p-4 rounded-lg border border-gray-700">
-            <p class="text-gray-400 text-xs mb-1">يدعم يوتيوب، فيميو، جوجل درايف، أو رابط فيديو مباشر (MP4).</p>
-            <div class="flex flex-col sm:flex-row gap-2">
-                <input type="text" id="videoUrlInput" placeholder="ضع رابط الفيديو هنا..." class="flex-1 bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" dir="ltr">
-                <button onclick="updateVideo()" class="gold-bg text-black font-bold px-6 py-3 rounded hover:bg-yellow-600 transition">حفظ الفيديو</button>
+            <p class="text-gray-400 text-xs mb-1 text-right">يدعم يوتيوب، فيميو، جوجل درايف، أو رابط فيديو مباشر. تقدر تعمل <b>Ctrl+V</b> في الخانة عشان تلصق الرابط.</p>
+            
+            <div class="flex flex-col sm:flex-row gap-2 w-full">
+                <input type="text" id="videoUrlInput" placeholder="اضغط هنا والصق الرابط (Ctrl+V) أو اكتبه..." class="flex-1 bg-neutral-800 border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-gold-border text-left" dir="ltr">
+                <button onclick="updateVideo()" class="gold-bg text-black font-bold px-6 py-3 rounded hover:bg-yellow-600 transition">حفظ اللينك</button>
+            </div>
+            
+            <div class="relative flex items-center py-2">
+                <div class="flex-grow border-t border-gray-600"></div>
+                <span class="flex-shrink-0 mx-4 text-gray-500 text-sm">أو</span>
+                <div class="flex-grow border-t border-gray-600"></div>
+            </div>
+
+            <div class="w-full">
+                <input type="file" id="videoUpload" accept="video/*" class="hidden">
+                <button type="button" id="uploadVideoBtn" onclick="document.getElementById('videoUpload').click()" class="w-full bg-neutral-700 border-2 border-dashed border-gold-border text-white font-bold py-3 rounded-lg hover:bg-neutral-600 transition flex items-center justify-center gap-2">
+                    <span>📁</span> اختيار فيديو من الجهاز
+                </button>
+                <p class="text-gray-500 text-[10px] mt-2">يدعم حتى 100 ميجابايت.</p>
             </div>
         </div>
     </section>
@@ -311,6 +324,12 @@
             appId: "1:132088618067:web:fda0dd1895b4711e433aa6"
         };
 
+        // =========================================================
+        // ✅ تم وضع بيانات Cloudinary الخاصة بك هنا
+        // =========================================================
+        const CLOUDINARY_CLOUD_NAME = "z2gmzdqk"; 
+        const CLOUDINARY_UPLOAD_PRESET = "oud_upload"; 
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
@@ -323,7 +342,7 @@
         let swiperInstance = null;
         let products = []; 
         let currentEditingImages = []; 
-        let closeModalTimeout = null; // متغير لحفظ مؤقت الإغلاق
+        let closeModalTimeout = null; 
         let mainPageScrollY = 0; 
 
         function lockScroll() {
@@ -390,17 +409,80 @@
                     container.innerHTML = `<iframe src="https://drive.google.com/file/d/${fileId}/preview" allow="autoplay; fullscreen" allowfullscreen></iframe>`; return;
                 }
             }
-            if (urlLower.match(/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/)) {
+            if (urlLower.match(/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/) || urlLower.includes('cloudinary.com') || urlLower.includes('firebasestorage.googleapis.com')) {
                 container.className = 'max-w-4xl mx-auto bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
                 container.innerHTML = `<video autoplay muted loop playsinline preload="metadata" class="w-full max-h-[70vh] mx-auto"><source src="${url}"></video>`; return;
             }
             container.className = 'max-w-4xl mx-auto relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-lg';
             container.innerHTML = `<iframe src="${url}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
         }
+        
         window.updateVideo = async function() {
             const url = document.getElementById('videoUrlInput').value.trim();
-            if (url) { renderVideo(url); document.getElementById('videoUrlInput').value = ''; try { await setDoc(settingsDocRef, { videoUrl: url }, { merge: true }); showToast('تم حفظ الفيديو!'); } catch(e) { console.error(e); } }
+            if (url) { 
+                renderVideo(url); 
+                document.getElementById('videoUrlInput').value = ''; 
+                try { await setDoc(settingsDocRef, { videoUrl: url }, { merge: true }); showToast('تم حفظ رابط الفيديو بنجاح!'); } 
+                catch(e) { console.error(e); } 
+            }
         };
+
+        // رفع الفيديو من الجهاز إلى Cloudinary
+        document.getElementById('videoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 100 * 1024 * 1024) {
+                alert('حجم الفيديو كبير جداً. الحد الأقصى المسموح به 100 ميجابايت.');
+                this.value = '';
+                return;
+            }
+
+            const uploadBtn = document.getElementById('uploadVideoBtn');
+            const originalText = uploadBtn.innerHTML;
+            uploadBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`);
+
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const percent = Math.round((event.loaded / event.total) * 100);
+                    uploadBtn.innerHTML = `<span>⏳</span> جاري الرفع ${percent}%`;
+                }
+            };
+
+            xhr.onload = async function() {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    const downloadURL = response.secure_url;
+                    renderVideo(downloadURL);
+                    try {
+                        await setDoc(settingsDocRef, { videoUrl: downloadURL }, { merge: true });
+                        showToast('تم رفع الفيديو بنجاح!');
+                    } catch(e) { console.error(e); }
+                } else {
+                    console.error(xhr.responseText);
+                    showToast('حدث خطأ أثناء الرفع', 'fa-exclamation-circle');
+                }
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+                document.getElementById('videoUpload').value = '';
+            };
+
+            xhr.onerror = function() {
+                console.error(xhr.responseText);
+                showToast('حدث خطأ في الاتصال', 'fa-exclamation-circle');
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+            };
+
+            xhr.send(formData);
+        });
 
         function compressImage(file, callback) { 
             const reader = new FileReader(); reader.onload = function(e) {
@@ -541,24 +623,20 @@
             });
         }
 
-        // تصفير المودال بالكامل لضمان ظهوره في المنتصف
         function resetModalPosition() {
             const modalBox = document.getElementById('modalBox');
             modalBox.style.transition = 'none';
-            modalBox.style.transform = 'translate(0px, 0px)'; // تصفير دقيق
+            modalBox.style.transform = 'translate(0px, 0px)';
             modalBox.style.opacity = '1';
-            // إجبار المتصفح على إعادة الحساب
             void modalBox.offsetWidth;
-            setTimeout(() => { 
-                modalBox.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease'; 
-            }, 50);
+            setTimeout(() => { modalBox.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease'; }, 50);
         }
 
         window.showProductDetails = function(id) {
             if (isAdmin) return;
             const product = products.find(p => String(p.id) === String(id)); if (!product) return;
             
-            clearTimeout(closeModalTimeout); // إلغاء أي إغلاق معلق
+            clearTimeout(closeModalTimeout);
             
             document.getElementById('modalTitle').innerText = product.name;
             document.getElementById('modalPrice').innerText = `${product.price} ج.م`;
@@ -576,20 +654,14 @@
             if (swiperInstance) swiperInstance.destroy(true, true);
             
             swiperInstance = new Swiper(".mySwiper", { 
-                loop: false, 
-                grabCursor: true, 
-                mousewheel: { forceToAxis: true, sensitivity: 1, releaseOnEdges: true }, 
-                pagination: { el: ".swiper-pagination", clickable: true }, 
-                navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
-                touchStartPreventDefault: false,
-                touchMoveStopPropagation: false
+                loop: false, grabCursor: true, mousewheel: { forceToAxis: true, sensitivity: 1, releaseOnEdges: true }, 
+                pagination: { el: ".swiper-pagination", clickable: true }, navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+                touchStartPreventDefault: false, touchMoveStopPropagation: false
             });
             
             document.getElementById('productModal').classList.remove('hidden');
             document.getElementById('productModal').classList.add('flex');
-            
-            resetModalPosition(); // تصفير قبل العرض
-            lockScroll(); 
+            resetModalPosition(); lockScroll(); 
         };
 
         window.openProductForm = function(id = null) {
@@ -632,9 +704,7 @@
         window.closeModal = function(modalId) {
             document.getElementById(modalId).classList.add('hidden'); document.getElementById(modalId).classList.remove('flex');
             if (modalId === 'productModal') { 
-                resetModalPosition(); 
-                resetZoom(); 
-                if (swiperInstance) { try { swiperInstance.enable(); } catch(e) {} } 
+                resetModalPosition(); resetZoom(); if (swiperInstance) { try { swiperInstance.enable(); } catch(e) {} } 
                 wheelAccumulator = 0; isWheelDragging = false; 
             }
             if (modalId !== 'adminLoginModal') { unlockScroll(); }
@@ -646,55 +716,36 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
-        // --- السحب والإغلاق (Swipe to Dismiss) المتوافق مع الأندرويد ---
         let startY = 0, currentY = 0, isDraggingModal = false, isPulling = false, modalInitialScrollTop = 0;
         let startX = 0;
         const modalBox = document.getElementById('modalBox');
         
         function closeModalWithAnimation() { 
             modalBox.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease'; 
-            modalBox.style.transform = `translateY(100vh)`; 
-            modalBox.style.opacity = '0'; 
-            clearTimeout(closeModalTimeout); // إلغاء أي مؤقت قديم
-            closeModalTimeout = setTimeout(() => { 
-                closeModal('productModal'); 
-                resetModalPosition(); 
-            }, 300); 
+            modalBox.style.transform = `translateY(100vh)`; modalBox.style.opacity = '0'; 
+            clearTimeout(closeModalTimeout); 
+            closeModalTimeout = setTimeout(() => { closeModal('productModal'); resetModalPosition(); }, 300); 
         }
         function snapBackModal() { 
             modalBox.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease'; 
-            modalBox.style.transform = 'translateY(0px)'; 
-            modalBox.style.opacity = '1'; 
+            modalBox.style.transform = 'translateY(0px)'; modalBox.style.opacity = '1'; 
         }
         
         modalBox.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1 || isPinching || isPanningZoom) return;
-            startY = e.touches[0].clientY;
-            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY; startX = e.touches[0].clientX;
             modalInitialScrollTop = modalBox.scrollTop;
-            isPulling = true;
-            isDraggingModal = false;
-            modalBox.style.transition = 'none';
+            isPulling = true; isDraggingModal = false; modalBox.style.transition = 'none';
         }, { passive: true });
 
         modalBox.addEventListener('touchmove', (e) => {
             if (!isPulling || e.touches.length > 1 || isPinching || isPanningZoom) return;
-            
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
-            const deltaX = currentX - startX;
-            const deltaY = currentY - startY;
+            const currentX = e.touches[0].clientX; const currentY = e.touches[0].clientY;
+            const deltaX = currentX - startX; const deltaY = currentY - startY;
 
-            if (!isDraggingModal && Math.abs(deltaX) > Math.abs(deltaY)) {
-                isPulling = false;
-                return;
-            }
-
+            if (!isDraggingModal && Math.abs(deltaX) > Math.abs(deltaY)) { isPulling = false; return; }
             if (deltaY > 0 && modalInitialScrollTop <= 5) {
-                if (!isDraggingModal) {
-                    isDraggingModal = true;
-                    if (swiperInstance) swiperInstance.disable(); 
-                }
+                if (!isDraggingModal) { isDraggingModal = true; if (swiperInstance) swiperInstance.disable(); }
                 if (e.cancelable) e.preventDefault(); 
                 modalBox.style.transform = `translateY(${deltaY}px)`;
                 modalBox.style.opacity = Math.max(0.4, 1 - deltaY / 600);
@@ -702,32 +753,22 @@
         }, { passive: false });
 
         modalBox.addEventListener('touchend', (e) => {
-            if (!isPulling) return;
-            isPulling = false;
+            if (!isPulling) return; isPulling = false;
             if (isDraggingModal) {
                 isDraggingModal = false;
                 const deltaY = e.changedTouches[0].clientY - startY;
-                if (deltaY > 120) {
-                    closeModalWithAnimation();
-                } else {
-                    snapBackModal();
-                    setTimeout(() => { if (swiperInstance) swiperInstance.enable(); }, 300);
-                }
+                if (deltaY > 120) { closeModalWithAnimation(); } 
+                else { snapBackModal(); setTimeout(() => { if (swiperInstance) swiperInstance.enable(); }, 300); }
             }
         });
 
         modalBox.addEventListener('mousedown', (e) => { if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.swiper-button-next') || e.target.closest('.swiper-button-prev') || e.target.closest('.swiper-wrapper')) return; startY = e.clientY; startX = e.clientX; modalInitialScrollTop = modalBox.scrollTop; isDraggingModal = true; isPulling = true; modalBox.style.transition = 'none'; });
         window.addEventListener('mousemove', (e) => { 
-            if (!isDraggingModal) return; 
-            const deltaY = e.clientY - startY; 
-            if (deltaY > 0 && modalInitialScrollTop <= 5) { 
-                modalBox.style.transform = `translateY(${deltaY}px)`; 
-                modalBox.style.opacity = Math.max(0.4, 1 - deltaY / 600); 
-            } 
+            if (!isDraggingModal) return; const deltaY = e.clientY - startY; 
+            if (deltaY > 0 && modalInitialScrollTop <= 5) { modalBox.style.transform = `translateY(${deltaY}px)`; modalBox.style.opacity = Math.max(0.4, 1 - deltaY / 600); } 
         });
         window.addEventListener('mouseup', (e) => { 
-            if (!isDraggingModal) return; 
-            isDraggingModal = false; isPulling = false; 
+            if (!isDraggingModal) return; isDraggingModal = false; isPulling = false; 
             const deltaY = e.clientY - startY; 
             if (deltaY > 120 && modalInitialScrollTop <= 5) { closeModalWithAnimation(); } else { snapBackModal(); } 
         });
@@ -742,7 +783,6 @@
             wheelResetTimer = setTimeout(() => { if (isWheelDragging) { wheelAccumulator = 0; isWheelDragging = false; snapBackModal(); } }, 120);
         }, { passive: false });
 
-        // --- إدارة الزوم (Pinch to Zoom) ---
         let zoomScale = 1, zoomTranslateX = 0, zoomTranslateY = 0, initialPinchDistance = 0, initialZoomScale = 1, isPinching = false, isPanningZoom = false, lastPanX = 0, lastPanY = 0;
         function getTouchDistance(touches) { const dx = touches[0].clientX - touches[1].clientX; const dy = touches[0].clientY - touches[1].clientY; return Math.sqrt(dx * dx + dy * dy); }
         function applyZoomTransform() { const activeImg = document.querySelector('.swiper-slide-active .zoomable-image'); if (!activeImg) return; if (zoomScale <= 1.01) activeImg.style.transform = ''; else activeImg.style.transform = `translate(${zoomTranslateX}px, ${zoomTranslateY}px) scale(${zoomScale})`; }
