@@ -98,6 +98,18 @@
         .qr-center-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ffffff; border-radius: 50%; padding: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); pointer-events: none; z-index: 2; }
         .qr-center-inner { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #D4AF37; }
         .qr-center-inner img { width: 100%; height: 100%; object-fit: contain; background: #fff; border-radius: 50%; }
+
+        /* 💡 شكل التحميل (Skeleton) */
+        .skeleton-box {
+            background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 8px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col" id="top">
@@ -324,9 +336,6 @@
             appId: "1:132088618067:web:fda0dd1895b4711e433aa6"
         };
 
-        // =========================================================
-        // ✅ تم وضع بيانات Cloudinary الخاصة بك هنا
-        // =========================================================
         const CLOUDINARY_CLOUD_NAME = "z2gmzdqk"; 
         const CLOUDINARY_UPLOAD_PRESET = "oud_upload"; 
 
@@ -427,7 +436,6 @@
             }
         };
 
-        // رفع الفيديو من الجهاز إلى Cloudinary
         document.getElementById('videoUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -596,12 +604,52 @@
         }
 
         function loadProductsFromFirebase() {
+            const grid = document.getElementById('productsGrid');
+            
+            // 1. عرض الهيكل العظمي (Skeleton) كشكل تحميل
+            let skeletonHTML = '';
+            for(let i=0; i<4; i++) {
+                skeletonHTML += `
+                    <div class="bg-neutral-900 border border-gray-800 rounded-lg overflow-hidden flex flex-col">
+                        <div class="h-40 sm:h-64 skeleton-box w-full"></div>
+                        <div class="p-2 sm:p-4 text-center">
+                            <div class="h-4 skeleton-box w-3/4 mx-auto mb-2"></div>
+                            <div class="h-4 skeleton-box w-1/2 mx-auto"></div>
+                        </div>
+                    </div>`;
+            }
+            grid.innerHTML = skeletonHTML;
+
+            // 2. محاولة جلب البيانات من الكاش (عشان الفتح يبقى فوري)
+            const cachedData = localStorage.getItem('oud_products_cache');
+            if (cachedData) {
+                try {
+                    products = JSON.parse(cachedData);
+                    renderProducts(); // عرض المنتجات المخزنة فوراً
+                } catch(e) { console.error('Cache error', e); }
+            }
+
+            // 3. جلب أحدث البيانات من Firebase
             onSnapshot(productsCollection, (snapshot) => {
-                products = [];
-                snapshot.forEach((doc) => { products.push({ id: doc.id, ...doc.data() }); });
+                let freshProducts = [];
+                snapshot.forEach((doc) => { freshProducts.push({ id: doc.id, ...doc.data() }); });
+                
+                // تحديث الواجهة
+                products = freshProducts;
                 renderProducts();
+                
+                // حفظ في الكاش للمرة الجاية
+                try { localStorage.setItem('oud_products_cache', JSON.stringify(products)); } 
+                catch(e) { console.warn('Local storage is full'); }
+                
+            }, (error) => {
+                console.error("Error fetching products: ", error);
+                if (!cachedData) {
+                    grid.innerHTML = '<p class="text-center text-red-500 col-span-full py-10">حدث خطأ في تحميل المنتجات. تأكد من اتصالك بالإنترنت.</p>';
+                }
             });
         }
+
         function renderProducts() {
             const grid = document.getElementById('productsGrid'); grid.innerHTML = '';
             if (products.length === 0 && !isAdmin) { grid.innerHTML = '<p class="text-gray-500 col-span-full text-center py-10">لا توجد منتجات حالياً.</p>'; return; }
@@ -613,7 +661,7 @@
                 card.innerHTML = `
                     ${adminButtons}
                     <div class="h-40 sm:h-64 overflow-hidden cursor-pointer" onclick="showProductDetails('${product.id}')">
-                        <img src="${mainImage}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-110">
+                        <img src="${mainImage}" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 hover:scale-110">
                     </div>
                     <div class="p-2 sm:p-4 text-center cursor-pointer flex-grow flex flex-col justify-between" onclick="showProductDetails('${product.id}')">
                         <h3 class="text-sm sm:text-lg font-bold text-white mb-1 sm:mb-2 leading-tight">${product.name}</h3>
