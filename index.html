@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>بيت العود العربي | عطور فاخرة</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -45,9 +45,7 @@
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
         }
-        .animate-login {
-            animation: modalFadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-        }
+        .animate-login { animation: modalFadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
 
         .hamburger-btn { position: fixed; top: 20px; right: 20px; z-index: 60; width: 50px; height: 50px; background: rgba(15, 15, 15, 0.9); border: 1.5px solid #D4AF37; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
         .hamburger-btn:hover { background: rgba(212, 175, 55, 0.15); transform: scale(1.05); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3); }
@@ -93,8 +91,9 @@
         .social-icon.facebook:hover, .social-icon.facebook:active, .social-icon.facebook:focus { box-shadow: 0 0 0 2px #1877F2, 0 0 15px 3px rgba(24, 119, 242, 0.85), 0 0 35px 10px rgba(24, 119, 242, 0.5), 0 8px 20px rgba(0, 0, 0, 0.5); }
         .social-icon.tiktok:hover, .social-icon.tiktok:active, .social-icon.tiktok:focus { box-shadow: 0 0 0 2px #25F4EE, 0 0 15px 3px rgba(37, 244, 238, 0.8), 0 0 35px 10px rgba(254, 44, 85, 0.6), 0 8px 20px rgba(0, 0, 0, 0.5); }
         
-        .swiper.mySwiper { touch-action: none; }
-        .swiper-slide { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; }
+        /* تخصيص السوايبر عشان يسمح بالسحب لتحت على الأندرويد */
+        .swiper.mySwiper { touch-action: pan-y !important; }
+        .swiper-slide { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; touch-action: pan-y !important; }
         .zoomable-image { max-width: 100%; max-height: 100%; object-fit: contain; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; pointer-events: auto; transform-origin: center center; will-change: transform; }
         
         #qrModal .bg-neutral-900 { max-width: 320px; padding: 20px; }
@@ -173,7 +172,6 @@
             <h2 class="text-2xl font-bold gold-text">مجموعة العطور</h2>
             <button id="addProductBtn" onclick="openProductForm()" class="admin-only gold-bg text-black font-bold px-6 py-2 rounded hover:bg-yellow-600 transition shadow-lg">+ إضافة منتج جديد</button>
         </div>
-        <!-- عرض المنتجات 2 في الموبايل -->
         <div id="productsGrid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6"></div>
     </section>
 
@@ -254,7 +252,6 @@
     <div id="productModal" class="fixed inset-0 bg-black bg-opacity-90 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
         <div id="modalBox" class="modal-box bg-neutral-900 border border-gray-700 rounded-t-2xl sm:rounded-lg max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
             <div class="drag-handle sm:hidden"></div>
-            <!-- تم جعل زر الإغلاق X ظاهر في الموبايل والكمبيوتر -->
             <button onclick="closeModal('productModal')" class="absolute top-4 left-4 text-gray-400 hover:text-white text-3xl z-50 block">&times;</button>
             <div class="flex flex-col gap-6 mt-6 sm:mt-4">
                 <div class="w-full relative">
@@ -328,26 +325,39 @@
         let products = []; 
         let currentEditingImages = []; 
         
-        // متغير لحفظ مكان وقوفك في الصفحة قبل فتح المنتج
         let mainPageScrollY = 0; 
 
-        // --- الوظائف الأساسية للواجهة ---
+        // قفل وفتح التمرير (معدلة للأندرويد)
+        function lockScroll() {
+            mainPageScrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${mainPageScrollY}px`;
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+        }
+        function unlockScroll() {
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+            window.scrollTo(0, mainPageScrollY);
+        }
+
         window.toggleDrawer = function() { 
             const drawer = document.getElementById('sideDrawer'), overlay = document.getElementById('drawerOverlay'), btn = document.getElementById('hamburgerBtn');
-            if (drawer.classList.contains('active')) { closeDrawer(); } else { drawer.classList.add('active'); overlay.classList.add('active'); btn.classList.add('active'); document.body.style.overflow = 'hidden'; }
+            if (drawer.classList.contains('active')) { closeDrawer(); } else { drawer.classList.add('active'); overlay.classList.add('active'); btn.classList.add('active'); lockScroll(); }
         };
         window.closeDrawer = function() {
             const drawer = document.getElementById('sideDrawer'), overlay = document.getElementById('drawerOverlay'), btn = document.getElementById('hamburgerBtn');
-            drawer.classList.remove('active'); overlay.classList.remove('active'); btn.classList.remove('active'); document.body.style.overflow = '';
+            drawer.classList.remove('active'); overlay.classList.remove('active'); btn.classList.remove('active'); unlockScroll();
         };
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); closeQRModal(); closeAdminLogin(); } });
 
-        // --- إدارة QR ---
         window.showQRModal = function() {
-            document.getElementById('qrModal').classList.remove('hidden'); document.body.style.overflow = 'hidden';
+            document.getElementById('qrModal').classList.remove('hidden'); lockScroll();
             generateQRCode(); document.getElementById('siteUrlInput').value = SITE_URL;
         };
-        window.closeQRModal = function() { document.getElementById('qrModal').classList.add('hidden'); document.body.style.overflow = ''; };
+        window.closeQRModal = function() { document.getElementById('qrModal').classList.add('hidden'); unlockScroll(); };
         function generateQRCode() {
             const container = document.getElementById('qrcode'); container.innerHTML = '';
             new QRCode(container, { text: SITE_URL, width: 180, height: 180, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
@@ -359,7 +369,6 @@
             try { await navigator.clipboard.writeText(SITE_URL); showToast('تم نسخ رابط الموقع بنجاح!', 'fa-check-circle'); } catch (err) { /* ... */ }
         };
 
-        // --- إدارة الفيديو ---
         function renderVideo(url) {
             const container = document.getElementById('videoContainer');
             if (!url) { container.className = 'max-w-4xl mx-auto relative aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 shadow-lg flex items-center justify-center'; container.innerHTML = '<p class="text-gray-500">لم يتم إضافة فيديو بعد.</p>'; return; }
@@ -395,7 +404,6 @@
             if (url) { renderVideo(url); document.getElementById('videoUrlInput').value = ''; try { await setDoc(settingsDocRef, { videoUrl: url }, { merge: true }); showToast('تم حفظ الفيديو!'); } catch(e) { console.error(e); } }
         };
 
-        // --- ضغط الصور ---
         function compressImage(file, callback) { 
             const reader = new FileReader(); reader.onload = function(e) {
                 const img = new Image(); img.onload = function() {
@@ -420,7 +428,6 @@
             }
         };
 
-        // --- إعدادات الموقع ---
         window.openSiteSettings = async function() {
             const docSnap = await getDoc(settingsDocRef);
             if (docSnap.exists()) {
@@ -432,7 +439,7 @@
                 document.getElementById('setTiktok').value = data.tiktokUrl || '';
             }
             document.getElementById('siteSettingsModal').classList.remove('hidden');
-            document.getElementById('siteSettingsModal').classList.add('flex');
+            document.getElementById('siteSettingsModal').classList.add('flex'); lockScroll();
         };
         document.getElementById('siteSettingsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -450,7 +457,6 @@
             } catch(e) { console.error(e); showToast('حدث خطأ', 'fa-exclamation-circle'); }
         });
 
-        // --- تحميل الإعدادات من Firebase ---
         function loadSettings() {
             onSnapshot(settingsDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -461,8 +467,7 @@
                     if (data.videoUrl) renderVideo(data.videoUrl); else renderVideo('https://www.youtube.com/embed/dQw4w9WgXcQ');
                     if (data.whatsappNumber) {
                         const waLink = `https://wa.me/${data.whatsappNumber}?text=مرحباً، أريد الاستفسار عن المنتجات`;
-                        document.getElementById('drawerWhatsappLink').href = waLink;
-                        document.getElementById('drawerWaIcon').href = waLink;
+                        document.getElementById('drawerWhatsappLink').href = waLink; document.getElementById('drawerWaIcon').href = waLink;
                     }
                     if (data.instagramUrl) document.getElementById('drawerIgIcon').href = data.instagramUrl;
                     if (data.facebookUrl) document.getElementById('drawerFbIcon').href = data.facebookUrl;
@@ -471,31 +476,26 @@
             });
         }
 
-        // --- تسجيل الدخول ---
         window.loginAdmin = function() {
             document.getElementById('adminLoginModal').classList.remove('hidden');
-            document.getElementById('adminLoginModal').classList.add('flex');
+            document.getElementById('adminLoginModal').classList.add('flex'); lockScroll();
         };
         window.closeAdminLogin = function() {
             document.getElementById('adminLoginModal').classList.add('hidden');
-            document.getElementById('adminLoginModal').classList.remove('flex');
+            document.getElementById('adminLoginModal').classList.remove('flex'); unlockScroll();
         };
         document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('adminEmail').value;
             const pass = document.getElementById('adminPassword').value;
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                closeAdminLogin();
-            } catch (error) {
-                alert('خطأ في الدخول: ' + error.message);
-            }
+                await signInWithEmailAndPassword(auth, email, pass); closeAdminLogin();
+            } catch (error) { alert('خطأ في الدخول: ' + error.message); }
         });
         window.logoutAdmin = function() { signOut(auth); };
 
         onAuthStateChanged(auth, (user) => {
-            isAdmin = !!user;
-            applyAdminMode();
+            isAdmin = !!user; applyAdminMode();
             if (user) showToast('مرحباً بك في وضع التاجر');
         });
 
@@ -515,7 +515,6 @@
             renderProducts();
         }
 
-        // --- المنتجات ---
         function loadProductsFromFirebase() {
             onSnapshot(productsCollection, (snapshot) => {
                 products = [];
@@ -529,11 +528,8 @@
             products.forEach(product => {
                 const card = document.createElement('div');
                 card.className = 'product-card bg-neutral-900 border border-gray-800 rounded-lg overflow-hidden shadow-lg flex flex-col';
-                
                 let adminButtons = isAdmin ? `<div class="absolute top-2 right-2 flex gap-2 z-10"><button onclick="event.stopPropagation(); openProductForm('${product.id}')" class="bg-blue-600 text-white w-8 h-8 sm:w-10 sm:h-10 rounded-full hover:bg-blue-700 shadow-lg text-xs sm:text-base">✎</button><button onclick="event.stopPropagation(); deleteProduct('${product.id}')" class="bg-red-600 text-white w-8 h-8 sm:w-10 sm:h-10 rounded-full hover:bg-red-700 shadow-lg text-xs sm:text-base">🗑</button></div>` : '';
-                
                 const mainImage = product.images && product.images.length > 0 ? product.images[0] : 'https://placehold.co/300x400/1a1a1a/D4AF37?text=No+Image';
-                
                 card.innerHTML = `
                     ${adminButtons}
                     <div class="h-40 sm:h-64 overflow-hidden cursor-pointer" onclick="showProductDetails('${product.id}')">
@@ -550,10 +546,6 @@
         window.showProductDetails = function(id) {
             if (isAdmin) return;
             const product = products.find(p => String(p.id) === String(id)); if (!product) return;
-            
-            // حفظ مكان الوقوف في الصفحة الرئيسية
-            mainPageScrollY = window.scrollY;
-            
             document.getElementById('modalTitle').innerText = product.name;
             document.getElementById('modalPrice').innerText = `${product.price} ج.م`;
             document.getElementById('modalDesc').innerText = product.description;
@@ -566,11 +558,23 @@
                     slide.innerHTML = `<img src="${imgUrl}" class="zoomable-image" draggable="false">`; wrapper.appendChild(slide);
                 });
             }
+            
             if (swiperInstance) swiperInstance.destroy(true, true);
-            swiperInstance = new Swiper(".mySwiper", { loop: false, grabCursor: true, mousewheel: { forceToAxis: true, sensitivity: 1, releaseOnEdges: true }, pagination: { el: ".swiper-pagination", clickable: true }, navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" } });
+            
+            // إعدادات السوايبر تسمح بالسحب لتحت (للأندرويد)
+            swiperInstance = new Swiper(".mySwiper", { 
+                loop: false, 
+                grabCursor: true, 
+                mousewheel: { forceToAxis: true, sensitivity: 1, releaseOnEdges: true }, 
+                pagination: { el: ".swiper-pagination", clickable: true }, 
+                navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+                touchStartPreventDefault: false,
+                touchMoveStopPropagation: false,
+                touchReleaseOnEdges: true
+            });
             
             resetModalPosition(); 
-            document.body.style.overflow = 'hidden'; 
+            lockScroll(); 
             document.getElementById('productModal').classList.remove('hidden');
         };
 
@@ -581,7 +585,7 @@
                 const product = products.find(p => String(p.id) === String(id));
                 if (product) { title.innerText = 'تعديل المنتج'; document.getElementById('editProductId').value = product.id; document.getElementById('prodName').value = product.name; document.getElementById('prodPrice').value = product.price; document.getElementById('prodDesc').value = product.description; currentEditingImages = product.images ? [...product.images] : []; }
             } else { title.innerText = 'إضافة منتج جديد'; }
-            renderImagePreviews(); formModal.classList.remove('hidden');
+            renderImagePreviews(); formModal.classList.remove('hidden'); lockScroll();
         };
         document.getElementById('prodImagesUpload').addEventListener('change', function(e) {
             Array.from(e.target.files).forEach(file => { compressImage(file, function(dataUrl) { currentEditingImages.push(dataUrl); renderImagePreviews(); }); });
@@ -611,7 +615,6 @@
             if (confirm('هل أنت متأكد من حذف هذا المنتج نهائياً؟')) { await deleteDoc(doc(db, "products", id)); showToast('تم الحذف.'); }
         };
 
-        // --- وظائف مساعدة ---
         window.closeModal = function(modalId) {
             document.getElementById(modalId).classList.add('hidden'); document.getElementById(modalId).classList.remove('flex');
             if (modalId === 'productModal') { 
@@ -619,13 +622,8 @@
                 resetZoom(); 
                 if (swiperInstance) { try { swiperInstance.enable(); } catch(e) {} } 
                 wheelAccumulator = 0; isWheelDragging = false; 
-                document.body.style.overflow = ''; 
-                
-                // إرجاع المستخدم لنفس النقطة اللي كان واقف فيها
-                setTimeout(() => {
-                    window.scrollTo(0, mainPageScrollY);
-                }, 10);
             }
+            if (modalId !== 'adminLoginModal') { unlockScroll(); }
         };
         
         function showToast(message, icon = 'fa-check-circle') {
@@ -634,18 +632,50 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
-        // --- السحب والإغلاق (Swipe to Dismiss) ---
+        // --- السحب والإغلاق (Swipe to Dismiss) المتوافق مع الأندرويد ---
         let startY = 0, currentY = 0, isDraggingModal = false, modalInitialScrollTop = 0;
         const modalBox = document.getElementById('modalBox');
         function resetModalPosition() { modalBox.style.transition = 'none'; modalBox.style.transform = ''; modalBox.style.opacity = '1'; setTimeout(() => { modalBox.style.transition = ''; }, 50); }
         function closeModalWithAnimation() { modalBox.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease'; modalBox.style.transform = `translateY(100vh)`; modalBox.style.opacity = '0'; setTimeout(() => { closeModal('productModal'); resetModalPosition(); }, 300); }
         function snapBackModal() { modalBox.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease'; modalBox.style.transform = ''; modalBox.style.opacity = '1'; }
-        function startDrag(clientY) { startY = clientY; currentY = clientY; modalInitialScrollTop = modalBox.scrollTop; isDraggingModal = true; modalBox.style.transition = 'none'; }
-        function moveDrag(clientY, event) { if (!isDraggingModal) return; currentY = clientY; const deltaY = currentY - startY; if (deltaY > 0 && modalInitialScrollTop <= 5) { if (event) event.preventDefault(); modalBox.style.transform = `translateY(${deltaY}px)`; const opacity = Math.max(0.4, 1 - deltaY / 600); modalBox.style.opacity = opacity; } }
-        function endDrag() { if (!isDraggingModal) return; isDraggingModal = false; const deltaY = currentY - startY; if (deltaY > 120 && modalInitialScrollTop <= 5) { closeModalWithAnimation(); } else { snapBackModal(); } startY = 0; currentY = 0; }
         
-        modalBox.addEventListener('touchstart', (e) => { if (e.touches.length > 1) return; if (zoomScale > 1.01 && e.target.closest('.swiper')) return; startDrag(e.touches[0].clientY); }, { passive: true });
-        modalBox.addEventListener('touchmove', (e) => { if (e.touches.length > 1) return; if (isPinching || isPanningZoom) return; moveDrag(e.touches[0].clientY, e); }, { passive: false });
+        function startDrag(clientY) { 
+            startY = clientY; currentY = clientY; modalInitialScrollTop = modalBox.scrollTop; isDraggingModal = true; modalBox.style.transition = 'none'; 
+        }
+        function moveDrag(clientY, event) { 
+            if (!isDraggingModal) return; 
+            currentY = clientY; 
+            const deltaY = currentY - startY; 
+            // بنسمح بالسحب لتحت بس لو إحنا في أول الصفحة
+            if (deltaY > 0 && modalInitialScrollTop <= 5) { 
+                if (event && event.cancelable) event.preventDefault(); // مهم جداً للأندرويد
+                modalBox.style.transform = `translateY(${deltaY}px)`; 
+                const opacity = Math.max(0.4, 1 - deltaY / 600); 
+                modalBox.style.opacity = opacity; 
+            } 
+        }
+        function endDrag() { 
+            if (!isDraggingModal) return; 
+            isDraggingModal = false; 
+            const deltaY = currentY - startY; 
+            if (deltaY > 120 && modalInitialScrollTop <= 5) { closeModalWithAnimation(); } 
+            else { snapBackModal(); } 
+            startY = 0; currentY = 0; 
+        }
+        
+        // تم استخدام passive: false عشان نسمح للكود إنه يوقف سكرول الأندرويد
+        modalBox.addEventListener('touchstart', (e) => { 
+            if (e.touches.length > 1) return; 
+            if (zoomScale > 1.01) return; 
+            startDrag(e.touches[0].clientY); 
+        }, { passive: true });
+        
+        modalBox.addEventListener('touchmove', (e) => { 
+            if (e.touches.length > 1) return; 
+            if (isPinching || isPanningZoom) return; 
+            moveDrag(e.touches[0].clientY, e); 
+        }, { passive: false });
+        
         modalBox.addEventListener('touchend', endDrag);
         modalBox.addEventListener('mousedown', (e) => { if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.swiper-button-next') || e.target.closest('.swiper-button-prev') || e.target.closest('.swiper-wrapper')) return; startDrag(e.clientY); });
         window.addEventListener('mousemove', (e) => { if (!isDraggingModal) return; moveDrag(e.clientY, null); });
@@ -661,7 +691,18 @@
             wheelResetTimer = setTimeout(() => { if (isWheelDragging) { wheelAccumulator = 0; isWheelDragging = false; snapBackModal(); } }, 120);
         }, { passive: false });
 
-        // تشغيل الدوال
+        // --- إدارة الزوم (Pinch to Zoom) ---
+        let zoomScale = 1, zoomTranslateX = 0, zoomTranslateY = 0, initialPinchDistance = 0, initialZoomScale = 1, isPinching = false, isPanningZoom = false, lastPanX = 0, lastPanY = 0;
+        function getTouchDistance(touches) { const dx = touches[0].clientX - touches[1].clientX; const dy = touches[0].clientY - touches[1].clientY; return Math.sqrt(dx * dx + dy * dy); }
+        function applyZoomTransform() { const activeImg = document.querySelector('.swiper-slide-active .zoomable-image'); if (!activeImg) return; if (zoomScale <= 1.01) activeImg.style.transform = ''; else activeImg.style.transform = `translate(${zoomTranslateX}px, ${zoomTranslateY}px) scale(${zoomScale})`; }
+        function resetZoom() { zoomScale = 1; zoomTranslateX = 0; zoomTranslateY = 0; isPinching = false; isPanningZoom = false; document.querySelectorAll('.zoomable-image').forEach(el => el.style.transform = ''); }
+
+        const imagesWrapper = document.getElementById('modalImagesWrapper');
+        imagesWrapper.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { e.preventDefault(); e.stopPropagation(); isPinching = true; initialPinchDistance = getTouchDistance(e.touches); initialZoomScale = zoomScale; if (swiperInstance) swiperInstance.disable(); } else if (e.touches.length === 1 && zoomScale > 1.01) { e.stopPropagation(); isPanningZoom = true; lastPanX = e.touches[0].clientX; lastPanY = e.touches[0].clientY; } }, { passive: false });
+        imagesWrapper.addEventListener('touchmove', (e) => { if (isPinching && e.touches.length === 2) { e.preventDefault(); e.stopPropagation(); const currentDistance = getTouchDistance(e.touches); zoomScale = Math.min(Math.max(initialZoomScale * (currentDistance / initialPinchDistance), 1), 5); applyZoomTransform(); } else if (isPanningZoom && e.touches.length === 1 && zoomScale > 1.01) { e.preventDefault(); e.stopPropagation(); zoomTranslateX += e.touches[0].clientX - lastPanX; zoomTranslateY += e.touches[0].clientY - lastPanY; lastPanX = e.touches[0].clientX; lastPanY = e.touches[0].clientY; applyZoomTransform(); } }, { passive: false });
+        imagesWrapper.addEventListener('touchend', (e) => { if (e.touches.length < 2) isPinching = false; if (e.touches.length === 0) { isPanningZoom = false; if (zoomScale <= 1.05) { resetZoom(); if (swiperInstance) swiperInstance.enable(); } else { if (swiperInstance) swiperInstance.disable(); } } });
+        imagesWrapper.addEventListener('wheel', (e) => { if (e.ctrlKey) { e.preventDefault(); e.stopPropagation(); const factor = 1 + (-e.deltaY / 300); zoomScale = Math.min(Math.max(zoomScale * factor, 1), 5); if (zoomScale <= 1.05) { resetZoom(); if (swiperInstance) swiperInstance.enable(); } else { applyZoomTransform(); if (swiperInstance) swiperInstance.disable(); } } else if (zoomScale > 1.01) { e.preventDefault(); e.stopPropagation(); zoomTranslateX -= e.deltaX; zoomTranslateY -= e.deltaY; applyZoomTransform(); } }, { passive: false });
+
         applyAdminMode();
         loadSettings(); 
         loadProductsFromFirebase(); 
