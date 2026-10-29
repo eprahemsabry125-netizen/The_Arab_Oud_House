@@ -91,7 +91,7 @@
         .social-icon.facebook:hover, .social-icon.facebook:active, .social-icon.facebook:focus { box-shadow: 0 0 0 2px #1877F2, 0 0 15px 3px rgba(24, 119, 242, 0.85), 0 0 35px 10px rgba(24, 119, 242, 0.5), 0 8px 20px rgba(0, 0, 0, 0.5); }
         .social-icon.tiktok:hover, .social-icon.tiktok:active, .social-icon.tiktok:focus { box-shadow: 0 0 0 2px #25F4EE, 0 0 15px 3px rgba(37, 244, 238, 0.8), 0 0 35px 10px rgba(254, 44, 85, 0.6), 0 8px 20px rgba(0, 0, 0, 0.5); }
         
-        /* تخصيص السوايبر عشان يسمح بالسحب لتحت على الأندرويد */
+        /* تحسينات السوايبر */
         .swiper.mySwiper { touch-action: pan-y !important; }
         .swiper-slide { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; touch-action: pan-y !important; }
         .zoomable-image { max-width: 100%; max-height: 100%; object-fit: contain; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; pointer-events: auto; transform-origin: center center; will-change: transform; }
@@ -327,7 +327,6 @@
         
         let mainPageScrollY = 0; 
 
-        // قفل وفتح التمرير (معدلة للأندرويد)
         function lockScroll() {
             mainPageScrollY = window.scrollY;
             document.body.style.position = 'fixed';
@@ -561,7 +560,6 @@
             
             if (swiperInstance) swiperInstance.destroy(true, true);
             
-            // إعدادات السوايبر تسمح بالسحب لتحت (للأندرويد)
             swiperInstance = new Swiper(".mySwiper", { 
                 loop: false, 
                 grabCursor: true, 
@@ -632,54 +630,79 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
-        // --- السحب والإغلاق (Swipe to Dismiss) المتوافق مع الأندرويد ---
-        let startY = 0, currentY = 0, isDraggingModal = false, modalInitialScrollTop = 0;
+        // --- السحب والإغلاق (Swipe to Dismiss) المتوافق مع الأندرويد وبدون تعارض مع السوايبر ---
+        let startY = 0, startX = 0, currentY = 0, isDraggingModal = false, isPulling = false, modalInitialScrollTop = 0;
         const modalBox = document.getElementById('modalBox');
         function resetModalPosition() { modalBox.style.transition = 'none'; modalBox.style.transform = ''; modalBox.style.opacity = '1'; setTimeout(() => { modalBox.style.transition = ''; }, 50); }
         function closeModalWithAnimation() { modalBox.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease'; modalBox.style.transform = `translateY(100vh)`; modalBox.style.opacity = '0'; setTimeout(() => { closeModal('productModal'); resetModalPosition(); }, 300); }
         function snapBackModal() { modalBox.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease'; modalBox.style.transform = ''; modalBox.style.opacity = '1'; }
         
-        function startDrag(clientY) { 
-            startY = clientY; currentY = clientY; modalInitialScrollTop = modalBox.scrollTop; isDraggingModal = true; modalBox.style.transition = 'none'; 
-        }
-        function moveDrag(clientY, event) { 
-            if (!isDraggingModal) return; 
-            currentY = clientY; 
-            const deltaY = currentY - startY; 
-            // بنسمح بالسحب لتحت بس لو إحنا في أول الصفحة
-            if (deltaY > 0 && modalInitialScrollTop <= 5) { 
-                if (event && event.cancelable) event.preventDefault(); // مهم جداً للأندرويد
-                modalBox.style.transform = `translateY(${deltaY}px)`; 
-                const opacity = Math.max(0.4, 1 - deltaY / 600); 
-                modalBox.style.opacity = opacity; 
-            } 
-        }
-        function endDrag() { 
-            if (!isDraggingModal) return; 
-            isDraggingModal = false; 
-            const deltaY = currentY - startY; 
-            if (deltaY > 120 && modalInitialScrollTop <= 5) { closeModalWithAnimation(); } 
-            else { snapBackModal(); } 
-            startY = 0; currentY = 0; 
-        }
-        
-        // تم استخدام passive: false عشان نسمح للكود إنه يوقف سكرول الأندرويد
-        modalBox.addEventListener('touchstart', (e) => { 
-            if (e.touches.length > 1) return; 
-            if (zoomScale > 1.01) return; 
-            startDrag(e.touches[0].clientY); 
+        modalBox.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1 || isPinching || isPanningZoom) return;
+            startY = e.touches[0].clientY;
+            startX = e.touches[0].clientX;
+            modalInitialScrollTop = modalBox.scrollTop;
+            isPulling = true;
+            isDraggingModal = false;
+            modalBox.style.transition = 'none';
         }, { passive: true });
-        
-        modalBox.addEventListener('touchmove', (e) => { 
-            if (e.touches.length > 1) return; 
-            if (isPinching || isPanningZoom) return; 
-            moveDrag(e.touches[0].clientY, e); 
+
+        modalBox.addEventListener('touchmove', (e) => {
+            if (!isPulling || e.touches.length > 1 || isPinching || isPanningZoom) return;
+            
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+
+            // لو الحركة أفقية أكتر، سيب السوايبر يتصرف
+            if (!isDraggingModal && Math.abs(deltaX) > Math.abs(deltaY)) {
+                isPulling = false;
+                return;
+            }
+
+            // لو الحركة لتحت، وفي أول الصفحة، ابدأ اسحب
+            if (deltaY > 0 && modalInitialScrollTop <= 5) {
+                if (!isDraggingModal) {
+                    isDraggingModal = true;
+                    if (swiperInstance) swiperInstance.disable(); // عطل مكتبة الصور عشان تسمح بالسحب
+                }
+                if (e.cancelable) e.preventDefault(); // وقف سكرول الأندرويد
+                modalBox.style.transform = `translateY(${deltaY}px)`;
+                modalBox.style.opacity = Math.max(0.4, 1 - deltaY / 600);
+            }
         }, { passive: false });
-        
-        modalBox.addEventListener('touchend', endDrag);
-        modalBox.addEventListener('mousedown', (e) => { if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.swiper-button-next') || e.target.closest('.swiper-button-prev') || e.target.closest('.swiper-wrapper')) return; startDrag(e.clientY); });
-        window.addEventListener('mousemove', (e) => { if (!isDraggingModal) return; moveDrag(e.clientY, null); });
-        window.addEventListener('mouseup', endDrag);
+
+        modalBox.addEventListener('touchend', (e) => {
+            if (!isPulling) return;
+            isPulling = false;
+            if (isDraggingModal) {
+                isDraggingModal = false;
+                const deltaY = e.changedTouches[0].clientY - startY;
+                if (deltaY > 120) {
+                    closeModalWithAnimation();
+                } else {
+                    snapBackModal();
+                    setTimeout(() => { if (swiperInstance) swiperInstance.enable(); }, 300);
+                }
+            }
+        });
+
+        modalBox.addEventListener('mousedown', (e) => { if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.swiper-button-next') || e.target.closest('.swiper-button-prev') || e.target.closest('.swiper-wrapper')) return; startY = e.clientY; startX = e.clientX; modalInitialScrollTop = modalBox.scrollTop; isDraggingModal = true; isPulling = true; modalBox.style.transition = 'none'; });
+        window.addEventListener('mousemove', (e) => { 
+            if (!isDraggingModal) return; 
+            const deltaY = e.clientY - startY; 
+            if (deltaY > 0 && modalInitialScrollTop <= 5) { 
+                modalBox.style.transform = `translateY(${deltaY}px)`; 
+                modalBox.style.opacity = Math.max(0.4, 1 - deltaY / 600); 
+            } 
+        });
+        window.addEventListener('mouseup', (e) => { 
+            if (!isDraggingModal) return; 
+            isDraggingModal = false; isPulling = false; 
+            const deltaY = e.clientY - startY; 
+            if (deltaY > 120 && modalInitialScrollTop <= 5) { closeModalWithAnimation(); } else { snapBackModal(); } 
+        });
         
         let wheelAccumulator = 0, wheelResetTimer = null, isWheelDragging = false;
         modalBox.addEventListener('wheel', (e) => {
